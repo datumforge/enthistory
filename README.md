@@ -21,7 +21,7 @@ You can install enthistory by running the following command:
 go get github.com/datumforge/enthistory@latest
 ```
 
-In addition to installing enthistory, you need to create two files in your `ent` directory: `entc.go` and `generate.go`.
+In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation. 
 The `entc.go` file should contain the following code:
 
 ```go
