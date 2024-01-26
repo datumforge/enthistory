@@ -49,7 +49,7 @@ func main() {
 }
 ```
 
-The `generate.go` file should contain the following code:
+Be sure to read the upstream [ent documentation](https://entgo.io/docs/code-gen/#version-compatibility-between-entc-and-ent) describing the differences between `entc` and `ent`, but assuming you're using `entc` as a package you would want the minimum reference to the run the code generate processes with entc command like below:
 
 ```go
 package ent
