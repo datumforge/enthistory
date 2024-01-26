@@ -194,7 +194,6 @@ To track which users are making changes to your tables, you can use the `enthist
 initializing the extension. You need to provide a key name (string) and specify the type of
 value (`enthistory.ValueTypeInt` for integers or `enthistory.ValueTypeString` for strings). The value corresponding to
 the key should be stored in the context using `context.WithValue()`. If you don't plan to use this feature, you can omit - you may also already have an existing `audit mixin` or similar which tracks the user performing the action, in which case, these fields would already be contained within the created history tables.
-it.
 
 ```go
 // Example for tracking user ID
