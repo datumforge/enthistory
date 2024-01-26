@@ -22,7 +22,7 @@ go get github.com/datumforge/enthistory@latest
 ```
 
 In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation. 
-The `entc.go` file should contain the following code:
+The `entc.go` file should reference the ent history plugin via `enthistory.NewHistoryExtension`, and the options you include for the plugin depend on your desired implementation (see the Configuration section below) but you can use the following example for reference:
 
 ```go
 //go:build ignore
