@@ -153,7 +153,7 @@ fmt.Println(len(simonHistory)) // 3
 
 ### Auditing
 
-enthistory includes tools for auditing history tables. You can enable auditing by using the `enthistory.WithAuditing()`
+enthistory includes tools for "auditing" history tables by providing a means of exporting the data inside of them. You can enable auditing by using the `enthistory.WithAuditing()`
 option when initializing the extension. The main tool for auditing is the `Audit()` method, which builds an audit log of
 the history tables that you can export as a file, upload to S3, or inspect.
 
