@@ -1,6 +1,13 @@
 [![Build status](https://badge.buildkite.com/d029f3155c06fe60715eff751abd91046ffa101db48efa878f.svg)](https://buildkite.com/datum/enthistory)
 
-Credit to [datumforge/enthistory](https://github.com/datumforge/enthistory) for the inspiration
+Credit to [datumforge/enthistory](https://github.com/datumforge/enthistory) for the inspiration. 
+
+Why a different plugin? While we normally try and contribute back to the original authors of the code the enhancements or updates we require, in this instance the decision was made largely due to:
+
+- Existing patterns within the `datumforge/datum` repo which would today require an import of the `entx` package and likely be a non-starter for the original authors
+- More complex schemas, mixins, code gen usage; when attempting to use the originally developed plugin we ran into numerous problems based on the types / methods we had already chosen and was easier to short-term directly update with the changes we needed
+- integration and/or mutual updates for our "soft delete" constructs to function
+
 
 # enthistory
 
