@@ -11,7 +11,7 @@ Why a different plugin? While we normally try and contribute back to the origina
 
 # enthistory
 
-enthistory is a powerful extension for generating history tables using ent.
+enthistory is a powerful extension for generating history tables using ent - the plugin will add-on to your existing `entc` usage and enumerate over your current schemas to create new "history" schemas containing an inventory of the changes related to the existing tables. 
 
 ## Installation
 
