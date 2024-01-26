@@ -56,7 +56,7 @@ package ent
 
 //go:generate go run -mod=mod entc.go
 ```
-
+You can additionally call other packages such as mockery within your `generate.go` - the [datum](https://github.com/datumforge/datum/blob/main/generate.go) repo could be a good reference point for this.
 ## Usage
 
 ### Querying History
