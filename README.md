@@ -123,7 +123,9 @@ fmt.Println(prev.ID == earliest.ID) // true
 ### Restoring History
 
 If you need to rollback a row in the database to a specific history entry, you can use the `.Restore()` function to
-accomplish that. Here's an example:
+accomplish that. **NOTE**: do not attempt to do this in your production environment or otherwise without testing in advance and creating your own SOP's around these types of procedures. By rolling back you are effectively overwriting your primary data source with a new entry, so use with caution!
+
+Here's an example:
 
 ```go
 // Let's say we create this character
