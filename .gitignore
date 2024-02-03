@@ -17,4 +17,47 @@
 # Go workspace file
 go.work
 
-.vscode/
+# local dev created files
+*.db
+datum
+datum-cli
+server.crt 
+server.key 
+private_key.pem
+public_key.pem
+# Sendgrid test email folders
+internal/httpserve/handlers/fixtures/emails/*
+fixtures/emails/*
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+
+# Logs 
+*.log
+
+# Editor files
+.vscode
+
+# OS Generated Files
+.DS_Store*
+.AppleDouble
+.LSOverride
+ehthumbs.db
+Icon?
+Thumbs.db
+
+.scannerwork/**
+results.txt
+
+*.mime
+*.mim
+
+# Configs
+*.env
+*.env-dev

@@ -1,16 +1,12 @@
 linters-settings:
   goimports:
-    local-prefixes: github.com/datumforge/datum
+    local-prefixes: github.com/datumforge/enthistory
   gofumpt:
     extra-rules: true
   gosec:
     exclude-generated: true
   revive:
     ignore-generated-header: true
-
-run:
-  skip-files:
-    - internal/entclean/main.go
 
 linters:
   enable:
