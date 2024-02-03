@@ -1,6 +1,6 @@
 linters-settings:
   goimports:
-    local-prefixes: github.com/datumforge/datum
+    local-prefixes: github.com/datumforge/enthistory
   gofumpt:
     extra-rules: true
   gosec:
