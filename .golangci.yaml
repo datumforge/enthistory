@@ -8,10 +8,6 @@ linters-settings:
   revive:
     ignore-generated-header: true
 
-run:
-  skip-files:
-    - internal/entclean/main.go
-
 linters:
   enable:
     # default linters
