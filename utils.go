@@ -67,7 +67,7 @@ func getUpdatedByField(updatedByValueType string) (*load.Field, error) {
 		return load.NewField(field.Int("updated_by").Optional().Nillable().Immutable().Descriptor())
 	}
 
-	return nil, nil
+	return nil, ErrUnsupportedType
 }
 
 // getHistoryAnnotations loads the annotations from the schema to reference if the schema

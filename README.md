@@ -1,6 +1,5 @@
 [![Build status](https://badge.buildkite.com/d029f3155c06fe60715eff751abd91046ffa101db48efa878f.svg)](https://buildkite.com/datum/enthistory)
 
-<<<<<<< HEAD
 Credit to [datumforge/enthistory](https://github.com/datumforge/enthistory) for the inspiration. 
 
 Why a different plugin? While we normally try and contribute back to the original authors of the code the enhancements or updates we require, in this instance the decision was made largely due to:
@@ -13,13 +12,6 @@ Why a different plugin? While we normally try and contribute back to the origina
 # enthistory
 
 enthistory is a powerful extension for generating history tables using ent - the plugin will add-on to your existing `entc` usage and enumerate over your current schemas to create new "history" schemas containing an inventory of the changes related to the existing tables. 
-=======
-Credit to [datumforge/enthistory](https://github.com/datumforge/enthistory) for the inspiration
-
-# enthistory
-
-enthistory is a powerful extension for generating history tables using ent.
->>>>>>> e0661ac (init commit of enthistory extenstion)
 
 ## Installation
 
@@ -29,13 +21,8 @@ You can install enthistory by running the following command:
 go get github.com/datumforge/enthistory@latest
 ```
 
-<<<<<<< HEAD
 In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation. 
 The `entc.go` file should reference the ent history plugin via `enthistory.NewHistoryExtension`, and the options you include for the plugin depend on your desired implementation (see the Configuration section below) but you can use the following example for reference:
-=======
-In addition to installing enthistory, you need to create two files in your `ent` directory: `entc.go` and `generate.go`.
-The `entc.go` file should contain the following code:
->>>>>>> e0661ac (init commit of enthistory extenstion)
 
 ```go
 //go:build ignore
@@ -62,22 +49,14 @@ func main() {
 }
 ```
 
-<<<<<<< HEAD
 Be sure to read the upstream [ent documentation](https://entgo.io/docs/code-gen/#version-compatibility-between-entc-and-ent) describing the differences between `entc` and `ent`, but assuming you're using `entc` as a package you would want the minimum reference to the run the code generate processes with entc command like below:
-=======
-The `generate.go` file should contain the following code:
->>>>>>> e0661ac (init commit of enthistory extenstion)
 
 ```go
 package ent
 
 //go:generate go run -mod=mod entc.go
 ```
-<<<<<<< HEAD
 You can additionally call other packages such as mockery within your `generate.go` - the [datum](https://github.com/datumforge/datum/blob/main/generate.go) repo could be a good reference point for this.
-=======
-
->>>>>>> e0661ac (init commit of enthistory extenstion)
 ## Usage
 
 ### Querying History
@@ -151,13 +130,9 @@ fmt.Println(prev.ID == earliest.ID) // true
 ### Restoring History
 
 If you need to rollback a row in the database to a specific history entry, you can use the `.Restore()` function to
-<<<<<<< HEAD
 accomplish that. **NOTE**: do not attempt to do this in your production environment or otherwise without testing in advance and creating your own SOP's around these types of procedures. By rolling back you are effectively overwriting your primary data source with a new entry, so use with caution!
 
 Here's an example:
-=======
-accomplish that. Here's an example:
->>>>>>> e0661ac (init commit of enthistory extenstion)
 
 ```go
 // Let's say we create this character
@@ -178,11 +153,7 @@ fmt.Println(len(simonHistory)) // 3
 
 ### Auditing
 
-<<<<<<< HEAD
 enthistory includes tools for "auditing" history tables by providing a means of exporting the data inside of them. You can enable auditing by using the `enthistory.WithAuditing()`
-=======
-enthistory includes tools for auditing history tables. You can enable auditing by using the `enthistory.WithAuditing()`
->>>>>>> e0661ac (init commit of enthistory extenstion)
 option when initializing the extension. The main tool for auditing is the `Audit()` method, which builds an audit log of
 the history tables that you can export as a file, upload to S3, or inspect.
 
@@ -231,12 +202,7 @@ indexing based on your specific needs.
 To track which users are making changes to your tables, you can use the `enthistory.WithUpdatedBy()` option when
 initializing the extension. You need to provide a key name (string) and specify the type of
 value (`enthistory.ValueTypeInt` for integers or `enthistory.ValueTypeString` for strings). The value corresponding to
-<<<<<<< HEAD
 the key should be stored in the context using `context.WithValue()`. If you don't plan to use this feature, you can omit - you may also already have an existing `audit mixin` or similar which tracks the user performing the action, in which case, these fields would already be contained within the created history tables.
-=======
-the key should be stored in the context using `context.WithValue()`. If you don't plan to use this feature, you can omit
-it.
->>>>>>> e0661ac (init commit of enthistory extenstion)
 
 ```go
 // Example for tracking user ID
