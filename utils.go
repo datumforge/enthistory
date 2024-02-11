@@ -67,7 +67,7 @@ func getUpdatedByField(updatedByValueType string) (*load.Field, error) {
 		return load.NewField(field.Int("updated_by").Optional().Nillable().Immutable().Descriptor())
 	}
 
-	return nil, ErrUnsupportedType
+	return nil, nil
 }
 
 // getHistoryAnnotations loads the annotations from the schema to reference if the schema
@@ -112,14 +112,14 @@ func getPkgFromSchemaPath(schemaPath string) (string, error) {
 	return lastPart, nil
 }
 
-// getIDType returns the id type, or an error if not supported
-func getIDType(idType string) (string, error) {
+// getIDType returns the id type, defaulting to a string
+func getIDType(idType string) string {
 	switch strings.ToLower(idType) {
 	case "int":
-		return "Int", nil
+		return "int"
 	case "string":
-		return "String", nil
+		return "string"
 	default:
-		return "", ErrUnsupportedIDType
+		return "string"
 	}
 }
