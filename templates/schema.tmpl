@@ -45,14 +45,14 @@ func ({{ $name }}) Fields() []ent.Field {
         field.Time("history_time").
             Default(time.Now).
             Immutable(),
-        field.{{ .IdType }}("ref").
+        field.{{ .IDType | ToUpperCamel }}("ref").
             Immutable().
             Optional(),
         field.Enum("operation").
             GoType(enthistory.OpType("")).
             Immutable(),
         {{- if $.WithUpdatedBy }}
-        field.{{ $.UpdatedByValueType }}("updated_by").
+        field.{{ $.UpdatedByValueType | ToUpperCamel }}("updated_by").
             Optional().
             Immutable().
             Nillable(),

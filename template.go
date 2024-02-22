@@ -1,10 +1,12 @@
 package enthistory
 
 import (
+	"os"
 	"strings"
 	"text/template"
 
 	"entgo.io/ent/entc/gen"
+	"github.com/stoewer/go-strcase"
 )
 
 // extractUpdatedByKey gets the key that is used for the updated_by field
@@ -68,4 +70,17 @@ func parseTemplate(name, path string) *gen.Template {
 	})
 
 	return gen.MustParse(t.ParseFS(_templates, path))
+}
+
+// parseSchemaTemplate parses the template and sets values in the template
+func parseSchemaTemplate(create *os.File, info templateInfo) error {
+	t := template.New("schema")
+	t.Funcs(template.FuncMap{
+		"ToUpperCamel": strcase.UpperCamelCase,
+		"ToLower":      strings.ToLower,
+	})
+
+	template.Must(t.ParseFS(_templates, "templates/schema.tmpl"))
+
+	return t.ExecuteTemplate(create, "schema.tmpl", info)
 }

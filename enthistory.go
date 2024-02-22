@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"entgo.io/ent/schema/field"
 
@@ -133,7 +132,7 @@ func (h *HistoryExtension) Templates() []*gen.Template {
 	templates := []*gen.Template{
 		parseTemplate("historyFromMutation", "templates/historyFromMutation.tmpl"),
 		parseTemplate("historyQuery", "templates/historyQuery.tmpl"),
-		parseTemplate("client", "templates/client.tmpl"),
+		parseTemplate("historyClient", "templates/historyClient.tmpl"),
 	}
 
 	if h.config.Auditing {
@@ -158,7 +157,6 @@ func (h *HistoryExtension) Annotations() []entc.Annotation {
 }
 
 var (
-	schemaTemplate     = template.Must(template.ParseFS(_templates, "templates/schema.tmpl"))
 	historyTableSuffix = "_history"
 )
 
@@ -194,24 +192,12 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	}
 
 	// determine id type used in schema
-	info.IDType, err = getIDType(idType)
-	if err != nil {
-		return nil, err
-	}
+	info.IDType = getIDType(idType)
 
 	// Load new base history schema
-	historySchema, err := loadHistorySchema(idType)
+	historySchema, err := loadHistorySchema(info.IDType)
 	if err != nil {
 		return nil, err
-	}
-
-	updatedByField, err := getUpdatedByField(info.UpdatedByValueType)
-	if err != nil {
-		return nil, err
-	}
-
-	if updatedByField != nil {
-		historySchema.Fields = append(historySchema.Fields, updatedByField)
 	}
 
 	if info.WithHistoryTimeIndex {
@@ -226,6 +212,13 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	historySchema.Annotations = map[string]any{
 		"EntSQL": map[string]any{
 			"table": info.TableName,
+		},
+		"History": map[string]any{
+			"isHistory": true,
+			"exclude":   true,
+		},
+		"DATUM_SCHEMAGEN": map[string]any{
+			"skip": true,
 		},
 	}
 
@@ -246,7 +239,7 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	defer create.Close()
 
 	// execute schemaTemplate at the history schema path
-	if err = schemaTemplate.Execute(create, info); err != nil {
+	if err = parseSchemaTemplate(create, info); err != nil {
 		return nil, err
 	}
 

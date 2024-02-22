@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_toSnakeCase(t *testing.T) {
+func TestToSnakeCase(t *testing.T) {
 	tests := []struct {
 		name string
 		args string
@@ -40,7 +40,7 @@ func Test_toSnakeCase(t *testing.T) {
 	}
 }
 
-func Test_getUpdatedByField(t *testing.T) {
+func TestGetUpdatedByField(t *testing.T) {
 	tests := []struct {
 		name               string
 		updatedByValueType string
@@ -130,7 +130,7 @@ func Test_getUpdatedByField(t *testing.T) {
 	}
 }
 
-func Test_getHistoryAnnotations(t *testing.T) {
+func TestGetHistoryAnnotations(t *testing.T) {
 	tests := []struct {
 		name   string
 		schema *load.Schema
@@ -198,7 +198,7 @@ func Test_getHistoryAnnotations(t *testing.T) {
 	}
 }
 
-func Test_getSchemaTableName(t *testing.T) {
+func TestGetSchemaTableName(t *testing.T) {
 	tests := []struct {
 		name   string
 		schema *load.Schema
@@ -244,7 +244,7 @@ func Test_getSchemaTableName(t *testing.T) {
 	}
 }
 
-func Test_getPkgFromSchemaPath(t *testing.T) {
+func TestGetPkgFromSchemaPath(t *testing.T) {
 	tests := []struct {
 		name       string
 		schemaPath string
@@ -287,68 +287,52 @@ func Test_getPkgFromSchemaPath(t *testing.T) {
 	}
 }
 
-func Test_getIDType(t *testing.T) {
+func TestGetIDType(t *testing.T) {
 	tests := []struct {
-		name    string
-		idType  string
-		want    string
-		wantErr bool
+		name   string
+		idType string
+		want   string
 	}{
 		{
-			name:    "string lower",
-			idType:  "string",
-			want:    "String",
-			wantErr: false,
+			name:   "string lower",
+			idType: "string",
+			want:   "string",
 		},
 		{
-			name:    "string title",
-			idType:  "String",
-			want:    "String",
-			wantErr: false,
+			name:   "string title",
+			idType: "String",
+			want:   "string",
 		},
 		{
-			name:    "string crazy",
-			idType:  "StRiNg",
-			want:    "String",
-			wantErr: false,
+			name:   "string crazy",
+			idType: "StRiNg",
+			want:   "string",
 		},
 		{
-			name:    "int lower",
-			idType:  "int",
-			want:    "Int",
-			wantErr: false,
+			name:   "int lower",
+			idType: "int",
+			want:   "int",
 		},
 		{
-			name:    "int title",
-			idType:  "Int",
-			want:    "Int",
-			wantErr: false,
+			name:   "int title",
+			idType: "Int",
+			want:   "int",
 		},
 		{
-			name:    "int crazy",
-			idType:  "InT",
-			want:    "Int",
-			wantErr: false,
+			name:   "int crazy",
+			idType: "InT",
+			want:   "int",
 		},
 		{
-			name:    "not cool",
-			idType:  "BoolFool",
-			want:    "",
-			wantErr: true,
+			name:   "not cool",
+			idType: "BoolFool",
+			want:   "string",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getIDType(tt.idType)
+			got := getIDType(tt.idType)
 
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Empty(t, got)
-
-				return
-			}
-
-			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
