@@ -7,7 +7,7 @@ toolchain go1.21.6
 require (
 	entgo.io/ent v0.13.1
 	github.com/stoewer/go-strcase v1.3.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
