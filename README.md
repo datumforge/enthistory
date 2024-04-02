@@ -1,6 +1,6 @@
 [![Build status](https://badge.buildkite.com/d029f3155c06fe60715eff751abd91046ffa101db48efa878f.svg)](https://buildkite.com/datum/enthistory)
 
-Credit to [datumforge/enthistory](https://github.com/datumforge/enthistory) for the inspiration. 
+Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspiration. 
 
 Why a different plugin? While we normally try and contribute back to the original authors of the code the enhancements or updates we require, in this instance the decision was made largely due to:
 
