@@ -5,8 +5,8 @@
 	{{- $pkg := base $.Config.Package }}
 	{{- template "header" $ }}
 import (
-    "context"
-    "encoding/json"
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -14,91 +14,91 @@ import (
 
 	"github.com/datumforge/enthistory"
 
-    {{- range $n := $.Nodes }}
-        {{- $name := $n.Name }}
-        {{- $history := hasSuffix $name "History" }}
-        {{- if $history }}
-        "{{ $.Config.Package }}/{{ lower $n.Name }}"
-        {{- end }}
-    {{- end }}
+	{{- range $n := $.Nodes }}
+		{{- $name := $n.Name }}
+		{{- $history := hasSuffix $name "History" }}
+		{{- if $history }}
+		"{{ $.Config.Package }}/{{ lower $n.Name }}"
+		{{- end }}
+	{{- end }}
 )
 
 {{ $updatedByKey := extractUpdatedByKey $.Annotations.HistoryConfig.UpdatedBy }}
 {{ $updatedByValueType := extractUpdatedByValueType $.Annotations.HistoryConfig.UpdatedBy }}
 
 type Change struct {
-    FieldName string
-    Old       any
-    New       any
+	FieldName string
+	Old       any
+	New       any
 }
 
 func NewChange(fieldName string, old, new any) Change {
-    return Change{
-        FieldName: fieldName,
-        Old:       old,
-        New:       new,
-    }
+	return Change{
+		FieldName: fieldName,
+		Old:       old,
+		New:       new,
+	}
 }
 
 type HistoryDiff[T any] struct {
-    Old     *T
-    New     *T
-    Changes []Change
+	Old     *T
+	New     *T
+	Changes []Change
 }
 
 var (
-    MismatchedRefError = errors.New("cannot take diff of histories with different Refs")
-    IdenticalHistoryError = errors.New("cannot take diff of identical history")
+	MismatchedRefError = errors.New("cannot take diff of histories with different Refs")
+	IdenticalHistoryError = errors.New("cannot take diff of identical history")
 )
 
 	{{ range $n := $.Nodes }}
-	    {{ $name := $n.Name }}
+		{{ $name := $n.Name }}
 
-	    {{ $history := hasSuffix $name "History" }}
-	    {{ if $history }}
-	    {{ else }}
-            {{ range $h := $.Nodes }}
-                {{ $sameNodeType := hasPrefix $h.Name (printf "%sHistory" $n.Name) }}
-                {{ if $sameNodeType }}
+		{{ $history := hasSuffix $name "History" }}
+		{{ if $history }}
+		{{ else }}
+			{{ range $h := $.Nodes }}
+				{{ $sameNodeType := hasPrefix $h.Name (printf "%sHistory" $n.Name) }}
+				{{ if $sameNodeType }}
 func ({{ $h.Receiver }} *{{ $h.Name }}) changes(new *{{ $h.Name }}) []Change {
-    var changes []Change
+	var changes []Change
 {{- range $f := $h.Fields }}
-    {{- if not (in $f.StructField (slist "Ref" "HistoryTime" "Operation" "UpdatedBy")) }}
-        if !reflect.DeepEqual({{ $h.Receiver }}.{{ $f.StructField }}, new.{{ $f.StructField }}) {
-            changes = append(changes, NewChange({{ lower $h.Name }}.Field{{ $f.StructField }} , {{ $h.Receiver }}.{{ $f.StructField }}, new.{{ $f.StructField }}))
-        }
-    {{- end }}
+	{{- if not (in $f.StructField (slist "Ref" "HistoryTime" "Operation" "UpdatedBy")) }}
+		if !reflect.DeepEqual({{ $h.Receiver }}.{{ $f.StructField }}, new.{{ $f.StructField }}) {
+			changes = append(changes, NewChange({{ lower $h.Name }}.Field{{ $f.StructField }} , {{ $h.Receiver }}.{{ $f.StructField }}, new.{{ $f.StructField }}))
+		}
+	{{- end }}
 {{- end }}
-    return changes
+	return changes
 }
 
 func ({{ $h.Receiver }} *{{ $h.Name }}) Diff(history *{{ $h.Name }}) (*HistoryDiff[{{ $h.Name }}], error) {
-    if {{ $h.Receiver }}.Ref != history.Ref {
-        return nil, MismatchedRefError
-    }
+	if {{ $h.Receiver }}.Ref != history.Ref {
+		return nil, MismatchedRefError
+	}
 
-    {{ $h.Receiver }}Unix, historyUnix := {{ $h.Receiver }}.HistoryTime.Unix(), history.HistoryTime.Unix()
-    {{ $h.Receiver }}Older := {{ $h.Receiver }}Unix < historyUnix || ({{ $h.Receiver }}Unix == historyUnix && {{ $h.Receiver }}.ID < history.ID)
-    historyOlder := {{ $h.Receiver }}Unix > historyUnix || ({{ $h.Receiver }}Unix == historyUnix && {{ $h.Receiver }}.ID > history.ID)
+	{{ $h.Receiver }}Unix, historyUnix := {{ $h.Receiver }}.HistoryTime.Unix(), history.HistoryTime.Unix()
+	{{ $h.Receiver }}Older := {{ $h.Receiver }}Unix < historyUnix || ({{ $h.Receiver }}Unix == historyUnix && {{ $h.Receiver }}.ID < history.ID)
+	historyOlder := {{ $h.Receiver }}Unix > historyUnix || ({{ $h.Receiver }}Unix == historyUnix && {{ $h.Receiver }}.ID > history.ID)
 
    if {{ $h.Receiver }}Older {
-        return &HistoryDiff[{{ $h.Name }}]{
-            Old:     {{ $h.Receiver }},
-            New:     history,
-            Changes: {{ $h.Receiver }}.changes(history),
-        }, nil
-    } else if historyOlder {
-        return &HistoryDiff[{{ $h.Name }}]{
-            Old:     history,
-            New:     {{ $h.Receiver }},
-            Changes: history.changes({{ $h.Receiver }}),
-        }, nil
-    }
-    return nil, IdenticalHistoryError
+		return &HistoryDiff[{{ $h.Name }}]{
+			Old:     {{ $h.Receiver }},
+			New:     history,
+			Changes: {{ $h.Receiver }}.changes(history),
+		}, nil
+	} else if historyOlder {
+		return &HistoryDiff[{{ $h.Name }}]{
+			Old:     history,
+			New:     {{ $h.Receiver }},
+			Changes: history.changes({{ $h.Receiver }}),
+		}, nil
+	}
+	return nil, IdenticalHistoryError
 }
-                {{ end }}
-            {{ end }}
-        {{ end }}
+				{{ end }}
+			{{ end }}
+		{{ end }}
 	{{ end }}
 
 func (c Change) String(op enthistory.OpType) string {
@@ -137,13 +137,13 @@ func (c *Client) Audit(ctx context.Context) ([][]string, error) {
 	var err error
 
 	{{- range $n := $.Nodes }}
-    {{- if (hasSuffix $n.Name "History") }}
+	{{- if (hasSuffix $n.Name "History") }}
 	record, err = audit{{ $n.Name }}(ctx, c.config)
 	if err != nil {
 		return nil, err
 	}
 	records = append(records, record...)
-    {{ end }}
+	{{ end }}
 	{{- end }}
 
 	return records, nil
@@ -161,11 +161,11 @@ type record struct {
 }
 
 func (r *record) toRow() []string {
-    {{- if not (eq $updatedByKey "") }}
+	{{- if not (eq $updatedByKey "") }}
 	row := make([]string, 6)
-    {{- else }}
-    row := make([]string, 5)
-    {{- end }}
+	{{- else }}
+	row := make([]string, 5)
+	{{- end }}
 
 	row[0] = r.Table
 	row[1] = fmt.Sprintf("%v", r.RefId)
@@ -180,8 +180,8 @@ func (r *record) toRow() []string {
 	}
 	{{- if not (eq $updatedByKey "") }}
 	if r.UpdatedBy != nil {
-        row[5] = fmt.Sprintf("%v", *r.UpdatedBy)
-    }
+		row[5] = fmt.Sprintf("%v", *r.UpdatedBy)
+	}
 	{{- end }}
 	return row
 }
@@ -229,7 +229,7 @@ func audit{{ $n.Name }}(ctx context.Context, config config) ([][]string, error) 
 				Operation:   curr.Operation,
 				{{- if not (eq $updatedByKey "") }}
 				UpdatedBy:   curr.UpdatedBy,
-                {{- end }}
+				{{- end }}
 			}
 			switch curr.Operation {
 			case enthistory.OpTypeInsert:
