@@ -1,6 +1,6 @@
 [![Build status](https://badge.buildkite.com/d029f3155c06fe60715eff751abd91046ffa101db48efa878f.svg)](https://buildkite.com/datum/enthistory)
 
-Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspiration. 
+Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspiration.
 
 Why a different plugin? While we normally try and contribute back to the original authors of the code the enhancements or updates we require, in this instance the decision was made largely due to:
 
@@ -8,10 +8,9 @@ Why a different plugin? While we normally try and contribute back to the origina
 - More complex schemas, mixins, code gen usage; when attempting to use the originally developed plugin we ran into numerous problems based on the types / methods we had already chosen and was easier to short-term directly update with the changes we needed
 - integration and/or mutual updates for our "soft delete" constructs to function
 
-
 # enthistory
 
-enthistory is a powerful extension for generating history tables using ent - the plugin will add-on to your existing `entc` usage and enumerate over your current schemas to create new "history" schemas containing an inventory of the changes related to the existing tables. 
+enthistory is a powerful extension for generating history tables using ent - the plugin will add-on to your existing `entc` usage and enumerate over your current schemas to create new "history" schemas containing an inventory of the changes related to the existing tables.
 
 ## Installation
 
@@ -21,7 +20,7 @@ You can install enthistory by running the following command:
 go get github.com/datumforge/enthistory@latest
 ```
 
-In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation. 
+In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation.
 The `entc.go` file should reference the ent history plugin via `enthistory.NewHistoryExtension`, and the options you include for the plugin depend on your desired implementation (see the Configuration section below) but you can use the following example for reference:
 
 ```go
@@ -56,7 +55,9 @@ package ent
 
 //go:generate go run -mod=mod entc.go
 ```
+
 You can additionally call other packages such as mockery within your `generate.go` - the [datum](https://github.com/datumforge/datum/blob/main/generate.go) repo could be a good reference point for this.
+
 ## Usage
 
 ### Querying History
@@ -104,7 +105,7 @@ earliest, _ := character.History().Earliest(ctx)
 // Get the latest history for this character (i.e., the current state of the actual character)
 latest, _ := character.History().Latest(ctx)
 
-// Get the history for this character as it was at a given point in time 
+// Get the history for this character as it was at a given point in time
 // (i.e., the state of the actual character at the given point in time)
 historyNow, _ := character.History().AsOf(ctx, time.Now())
 ```
@@ -166,7 +167,7 @@ auditTable, _ := client.Audit(ctx)
 The audit log contains six columns when user tracking is enabled. Here's an example of how the audit log might look:
 
 | Table            | Ref Id | History Time             | Operation | Changes                              | Updated By |
-|------------------|--------|--------------------------|-----------|--------------------------------------|------------|
+| ---------------- | ------ | ------------------------ | --------- | ------------------------------------ | ---------- |
 | CharacterHistory | 1      | Sat Mar 18 16:31:31 2023 | INSERT    | age: 47 name: "Simon Petrikov"       | 75         |
 | CharacterHistory | 1      | Sat Mar 18 16:31:31 2023 | UPDATE    | name: "Simon Petrikov" -> "Ice King" | 75         |
 | CharacterHistory | 1      | Sat Mar 18 16:31:31 2023 | DELETE    | age: 47 name: "Ice King"             | 75         |
@@ -270,6 +271,12 @@ func main() {
 
 For a complete example of using a custom schema path, refer to the [custompaths](./_examples/custompaths/ent/entc.go)
 example.
+
+### Setting a Schema Name
+
+If you want to set the schema name for `entsql`, you can use the `enthistory.WithSchemaName()` configuration option. This can be used in conjunction with
+ent [Multiple Schema Migrations](https://entgo.io/docs/multischema-migrations/) and the [Schema Config](https://entgo.io/docs/feature-flags/#schema-config)
+features.
 
 ## Caveats
 

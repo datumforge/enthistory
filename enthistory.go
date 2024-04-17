@@ -33,6 +33,7 @@ type Config struct {
 	UpdatedBy        *UpdatedBy
 	Auditing         bool
 	SchemaPath       string
+	SchemaName       string
 	FieldProperties  *FieldProperties
 	HistoryTimeIndex bool
 }
@@ -64,6 +65,15 @@ func WithUpdatedBy(key string, valueType ValueType) ExtensionOption {
 func WithAuditing() ExtensionOption {
 	return func(ex *HistoryExtension) {
 		ex.config.Auditing = true
+	}
+}
+
+// WithSchemaName allows you to set an alternative schema name
+// This can be used to set a schema name for multi-schema migrations and SchemaConfig feature
+// https://entgo.io/docs/multischema-migrations/
+func WithSchemaName(schemaName string) ExtensionOption {
+	return func(ex *HistoryExtension) {
+		ex.config.SchemaName = schemaName
 	}
 }
 
@@ -120,6 +130,7 @@ type templateInfo struct {
 	IDType               string
 	SchemaPkg            string
 	TableName            string
+	SchemaName           string
 	OriginalTableName    string
 	WithUpdatedBy        bool
 	UpdatedByValueType   string
@@ -171,6 +182,7 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 		TableName:         fmt.Sprintf("%v%s", getSchemaTableName(schema), historyTableSuffix),
 		OriginalTableName: schema.Name,
 		SchemaPkg:         pkg,
+		SchemaName:        h.config.SchemaName,
 	}
 
 	// setup history time and updated by based on config settings
@@ -212,7 +224,7 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	historySchema.Annotations = map[string]any{
 		"EntSQL": map[string]any{
 			"table":  info.TableName,
-			"schema": "history",
+			"schema": info.SchemaName,
 		},
 		"History": map[string]any{
 			"isHistory": true,
