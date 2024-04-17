@@ -211,7 +211,8 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	historySchema.Fields = append(historySchema.Fields, historyFields...)
 	historySchema.Annotations = map[string]any{
 		"EntSQL": map[string]any{
-			"table": info.TableName,
+			"table":  info.TableName,
+			"schema": "history",
 		},
 		"History": map[string]any{
 			"isHistory": true,
