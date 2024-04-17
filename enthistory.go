@@ -324,7 +324,7 @@ func (h *HistoryExtension) getHistorySchemaPath(schema *load.Schema) (string, er
 	return path, nil
 }
 
-// removeOldGenerated removes all existing history schemas (schemas where the annoation has isHistory = true)
+// removeOldGenerated removes all existing history schemas (schemas where the annotation has isHistory = true)
 // from the path
 func (h *HistoryExtension) removeOldGenerated(schemas []*load.Schema) error {
 	for _, schema := range schemas {

@@ -7,7 +7,6 @@ linters-settings:
     exclude-generated: true
   revive:
     ignore-generated-header: true
-
 linters:
   enable:
     # default linters
@@ -21,7 +20,6 @@ linters:
     - gosec
     - bodyclose
     - noctx
-
     # additional linters
     - gocritic
     - gocyclo
