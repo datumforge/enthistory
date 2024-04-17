@@ -31,6 +31,9 @@ func ({{ $name }}) Annotations() []schema.Annotation {
 		entx.SchemaGenSkip(true),
 		entsql.Annotation{
 			Table: "{{ .TableName }}",
+			{{- if .SchemaName }}
+			Schema: "{{ .SchemaName }}",
+			{{- end }}
 		},
 		enthistory.Annotations{
 			IsHistory: true,
