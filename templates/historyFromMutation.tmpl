@@ -18,15 +18,6 @@
 		}
 	}
 
-	func rollback(tx *Tx, err error) error {
-		if tx != nil {
-			if rerr := tx.Rollback(); rerr != nil {
-				err = fmt.Errorf("%w: %v", err, rerr)
-			}
-			return err
-		}
-		return err
-	}
 	{{ $updatedByKey := extractUpdatedByKey $.Annotations.HistoryConfig.UpdatedBy }}
 	{{ $updatedByValueType := extractUpdatedByValueType $.Annotations.HistoryConfig.UpdatedBy }}
 	{{ range $n := $.Nodes }}
@@ -39,11 +30,7 @@
 				{{ $sameNodeType := hasPrefix $h.Name (printf "%sHistory" $name) }}
 				{{ if $sameNodeType }}
 					func (m *{{ $mutator }}) CreateHistoryFromCreate(ctx context.Context) error {
-						client := m.Client()
-						tx, err := m.Tx()
-						if err != nil {
-							tx = nil
-						}
+					   client := m.Client()
 
 					   {{ if not (eq $updatedByKey "") }}
 					   updatedBy, _ := ctx.Value("{{ $updatedByKey }}").({{ $updatedByValueType }})
@@ -51,13 +38,11 @@
 
 						id, ok := m.ID()
 						if !ok {
-							return rollback(tx, idNotFoundError)
+							return idNotFoundError
 						}
 
 						create := client.{{$h.Name}}.Create()
-						if tx != nil {
-							create = tx.{{$h.Name}}.Create()
-						}
+
 						create = create.
 							SetOperation(EntOpToHistoryOp(m.Op())).
 							SetHistoryTime(time.Now()).
@@ -79,11 +64,9 @@
 								create = create.Set{{ if $f.Nillable }}Nillable{{ end }}{{ $f.StructField }}({{ if $f.Nillable }}&{{ end }}{{ camel $f.Name }})
 							}
 						{{ end }}
-						_, err = create.Save(ctx)
-						if err != nil {
-							rollback(tx, err)
-						}
-						return nil
+						_, err := create.Save(ctx)
+
+						return err
 					}
 
 					func (m *{{ $mutator }}) CreateHistoryFromUpdate(ctx context.Context) error {
@@ -92,10 +75,6 @@
 							return m.CreateHistoryFromDelete(ctx)
 						}
 						client := m.Client()
-						tx, err := m.Tx()
-						if err != nil {
-							tx = nil
-						}
 
 						{{ if not (eq $updatedByKey "") }}
 						updatedBy, _ := ctx.Value("{{ $updatedByKey }}").({{ $updatedByValueType }})
@@ -103,19 +82,17 @@
 
 						ids, err := m.IDs(ctx)
 						if err != nil {
-							return rollback(tx, fmt.Errorf("getting ids: %w", err))
+							return fmt.Errorf("getting ids: %w", err)
 						}
 
 						for _, id := range ids {
 							{{ camel $name }}, err := client.{{ $name }}.Get(ctx, id)
 							if err != nil {
-								return rollback(tx, err)
+								return err
 							}
 
 							create := client.{{$h.Name}}.Create()
-							if tx != nil {
-								create = tx.{{$h.Name}}.Create()
-							}
+
 							create = create.
 								SetOperation(EntOpToHistoryOp(m.Op())).
 								SetHistoryTime(time.Now()).
@@ -139,9 +116,8 @@
 								create = create.Set{{ if $f.Nillable }}Nillable{{ end }}{{ $f.StructField }}({{ camel $name }}.{{ pascal $f.Name }})
 							}
 						{{ end }}
-							_, err = create.Save(ctx)
-							if err != nil {
-								rollback(tx, err)
+							if _, err := create.Save(ctx); err != nil {
+								return err
 							}
 						}
 
@@ -154,10 +130,6 @@
 							return nil
 						}
 						client := m.Client()
-						tx, err := m.Tx()
-						if err != nil {
-							tx = nil
-						}
 
 						{{ if not (eq $updatedByKey "") }}
 						updatedBy, _ := ctx.Value("{{ $updatedByKey }}").({{ $updatedByValueType }})
@@ -165,19 +137,16 @@
 
 						ids, err := m.IDs(ctx)
 						if err != nil {
-							return rollback(tx, fmt.Errorf("getting ids: %w", err))
+							return fmt.Errorf("getting ids: %w", err)
 						}
 
 						for _, id := range ids {
 							{{ camel $name }}, err := client.{{ $name }}.Get(ctx, id)
 							if err != nil {
-								return rollback(tx, err)
+								return err
 							}
 
 							create := client.{{$h.Name}}.Create()
-							if tx != nil {
-								create = tx.{{$h.Name}}.Create()
-							}
 
 							{{- if not (eq $updatedByKey "") }}
 								{{- if (eq $updatedByValueType "int") }}
@@ -199,7 +168,7 @@
 							{{- end }}
 								Save(ctx)
 							if err != nil {
-								rollback(tx, err)
+								return err
 							}
 						}
 
