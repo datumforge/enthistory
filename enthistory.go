@@ -34,6 +34,7 @@ type Config struct {
 	Auditing         bool
 	SchemaPath       string
 	SchemaName       string
+	Query            bool
 	FieldProperties  *FieldProperties
 	HistoryTimeIndex bool
 }
@@ -65,6 +66,13 @@ func WithUpdatedBy(key string, valueType ValueType) ExtensionOption {
 func WithAuditing() ExtensionOption {
 	return func(ex *HistoryExtension) {
 		ex.config.Auditing = true
+	}
+}
+
+// WithGQLQuery adds the entgql Query annotation to the history schema in order to allow for querying
+func WithGQLQuery() ExtensionOption {
+	return func(ex *HistoryExtension) {
+		ex.config.Query = true
 	}
 }
 
@@ -131,6 +139,7 @@ type templateInfo struct {
 	SchemaPkg            string
 	TableName            string
 	SchemaName           string
+	Query                bool
 	OriginalTableName    string
 	WithUpdatedBy        bool
 	UpdatedByValueType   string
@@ -183,6 +192,7 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 		OriginalTableName: schema.Name,
 		SchemaPkg:         pkg,
 		SchemaName:        h.config.SchemaName,
+		Query:             h.config.Query,
 	}
 
 	// setup history time and updated by based on config settings
@@ -221,6 +231,10 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 	// merge the original schema onto the history schema
 	historySchema.Name = fmt.Sprintf("%vHistory", schema.Name)
 	historySchema.Fields = append(historySchema.Fields, historyFields...)
+
+	// annotations for the history schema need to be added here, in addition to the schema
+	// because they are loaded in memory and decisions in the schema are made based on the annotations
+	// before the actual schema is written to disk
 	historySchema.Annotations = map[string]any{
 		"EntSQL": map[string]any{
 			"table":  info.TableName,
