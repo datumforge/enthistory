@@ -29,7 +29,19 @@
 			{{ range $h := $.Nodes }}
 				{{ $sameNodeType := hasPrefix $h.Name (printf "%sHistory" $name) }}
 				{{ if $sameNodeType }}
+					{{- if $.Annotations.HistoryConfig.Skipper }}
+					func (m *{{ $mutator }}) skipper(ctx context.Context) bool {
+						{{ $.Annotations.HistoryConfig.Skipper }}
+					}
+					{{- end }}
+
 					func (m *{{ $mutator }}) CreateHistoryFromCreate(ctx context.Context) error {
+					   {{- if $.Annotations.HistoryConfig.Skipper }}
+					   if m.skipper(ctx) {
+						   return nil
+					   }
+
+					   {{- end }}
 					   client := m.Client()
 
 					   {{ if not (eq $updatedByKey "") }}
@@ -70,6 +82,12 @@
 					}
 
 					func (m *{{ $mutator }}) CreateHistoryFromUpdate(ctx context.Context) error {
+						{{- if $.Annotations.HistoryConfig.Skipper }}
+						if m.skipper(ctx) {
+							return nil
+						}
+
+						{{- end }}
 						 // check for soft delete operation and delete instead
 						if entx.CheckIsSoftDelete(ctx) {
 							return m.CreateHistoryFromDelete(ctx)
@@ -125,6 +143,12 @@
 					}
 
 					func (m *{{ $mutator }}) CreateHistoryFromDelete(ctx context.Context) error {
+						{{- if $.Annotations.HistoryConfig.Skipper }}
+						if m.skipper(ctx) {
+							return nil
+						}
+
+						{{- end }}
 						// check for soft delete operation and skip so it happens on update
 						if entx.CheckIsSoftDelete(ctx) {
 							return nil

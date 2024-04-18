@@ -35,6 +35,7 @@ type Config struct {
 	SchemaPath       string
 	SchemaName       string
 	Query            bool
+	Skipper          string
 	FieldProperties  *FieldProperties
 	HistoryTimeIndex bool
 }
@@ -82,6 +83,13 @@ func WithGQLQuery() ExtensionOption {
 func WithSchemaName(schemaName string) ExtensionOption {
 	return func(ex *HistoryExtension) {
 		ex.config.SchemaName = schemaName
+	}
+}
+
+// WithSkipper allows you to set a skipper function to skip history tracking
+func WithSkipper(skipper string) ExtensionOption {
+	return func(ex *HistoryExtension) {
+		ex.config.Skipper = skipper
 	}
 }
 
