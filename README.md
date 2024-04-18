@@ -290,6 +290,23 @@ func (r *queryResolver) TodoHistories(ctx context.Context, after *entgql.Cursor[
 }
 ```
 
+## Adding a Skipper Function
+
+If you want to conditionally skip saving history data, you can use the `enthistory.WithSkipper()` configuration option. This
+should be the string representation that returns `true` or `false`. The function has access to the `mutation` object and the `context`. For example:
+
+```go
+    skipper := `
+        hasFeature := m.CheckFeature(ctx)
+
+        return !hasFeature
+    `
+
+	historyExt := enthistory.NewHistoryExtension(
+        enthistory.WithSkipper(skipper),
+    )
+```
+
 ## Caveats
 
 Here are a few caveats to keep in mind when using enthistory:
