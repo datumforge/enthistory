@@ -44,6 +44,7 @@ func ({{ $name }}) Annotations() []schema.Annotation {
 		},
 		{{- if .Query }}
 		entgql.QueryField(),
+		entgql.RelayConnection(),
 		{{- end}}
 	}
 }
