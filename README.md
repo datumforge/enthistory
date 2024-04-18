@@ -278,6 +278,18 @@ If you want to set the schema name for `entsql`, you can use the `enthistory.Wit
 ent [Multiple Schema Migrations](https://entgo.io/docs/multischema-migrations/) and the [Schema Config](https://entgo.io/docs/feature-flags/#schema-config)
 features.
 
+### Adding GQL Query
+
+If you are using [gqlgen](https://github.com/99designs/gqlgen/) and want to generate the query resolvers for the history schemas, you can use the `enthistory.WithGQLQuery()`
+configuration option. With this enabled, `ent.resolvers` with be created, such as:
+
+```go
+// TodoHistories is the resolver for the todoHistories field.
+func (r *queryResolver) TodoHistories(ctx context.Context, after *entgql.Cursor[string], first *int, before *entgql.Cursor[string], last *int, orderBy *generated.TodoHistoryOrder, where *generated.OrganizationHistoryWhereInput) (*generated.TodoHistoryConnection, error) {
+	panic(fmt.Errorf("not implemented: TodoHistories - todoHistories"))
+}
+```
+
 ## Caveats
 
 Here are a few caveats to keep in mind when using enthistory:
