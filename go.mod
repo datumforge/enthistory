@@ -2,7 +2,7 @@ module github.com/datumforge/enthistory
 
 go 1.21
 
-toolchain go1.21.6
+toolchain go1.22.2
 
 require (
 	entgo.io/ent v0.13.1
