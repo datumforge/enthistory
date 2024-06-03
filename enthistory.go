@@ -110,7 +110,7 @@ type Config struct {
 	HistoryTimeIndex bool
 }
 
-// Name of the Config for the entc.Extension interface
+// Name of the Config
 func (c Config) Name() string {
 	return "HistoryConfig"
 }
