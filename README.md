@@ -1,18 +1,21 @@
 [![Build status](https://badge.buildkite.com/d029f3155c06fe60715eff751abd91046ffa101db48efa878f.svg)](https://buildkite.com/datum/enthistory)
-
-# enthistory
-
-Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspiration.
-
-Why a different plugin? While we normally try and contribute back to the original authors of the code the enhancements or updates we require, in this instance the decision was made largely due to:
-
-- Existing patterns within the `datumforge/datum` repo which would today require an import of the `entx` package and likely be a non-starter for the original authors
-- More complex schemas, mixins, code gen usage; when attempting to use the originally developed plugin we ran into numerous problems based on the types / methods we had already chosen and was easier to short-term directly update with the changes we needed
-- integration and/or mutual updates for our "soft delete" constructs to function
+[![Go Report Card](https://goreportcard.com/badge/github.com/datumforge/enthistory)](https://goreportcard.com/report/github.com/datumforge/enthistory)
+[![Build status](https://badge.buildkite.com/a3a38b934ca2bb7fc771e19bc5a986a1452fa2962e4e1c63bf.svg?branch=main)](https://buildkite.com/datum/enthistory)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=datumforge_enthistory&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=datumforge_enthistory)
+[![Go Reference](https://pkg.go.dev/badge/github.com/datumforge/enthistory.svg)](https://pkg.go.dev/github.com/datumforge/enthistory)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache2.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # enthistory
 
 enthistory is a powerful extension for generating history tables using ent - the plugin will add-on to your existing `entc` usage and enumerate over your current schemas to create new "history" schemas containing an inventory of the changes related to the existing tables.
+
+Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspiration - we chose to create our own for a number of reasons, some being:
+
+- We have existing patterns within the `datumforge/datum` repo which would today require an import of the `entx` package and likely be a non-starter for the original authors
+- We have more complex schemas, mixins, code gen usage; when attempting to use the originally developed plugin we ran into numerous problems based on the types / methods we had already chosen and was easier to short-term directly update with the changes we needed
+- integration with and/or mutual code updates for our "soft delete" constructs to continue to function
+- Specific desires / levels of control regarding data retention and tracking
+
 
 ## Installation
 
@@ -363,5 +366,16 @@ For more information on enums, refer to the [ent documentation](https://entgo.io
 
 ## Contributing
 
-Please refer to our [contributing guidelines](.github/CONTRIBUTING.md) and [code of conduct](.github/CODE_OF_CONDUCT.md)
-for information on how to contribute to enthistory.
+Please read the [contributing](.github/CONTRIBUTING.md) guide as well as the [Developer Certificate of Origin](https://developercertificate.org/). You will be required to sign all commits to the Datum project, so if you're unfamiliar with how to set that up, see [github's documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification).
+
+## Security
+
+We take the security of our software products and services seriously, including all of the open source code repositories managed through our Github Organizations, such as [datumforge](https://github.com/datumforge). If you believe you have found a security vulnerability in any of our repositories, please report it to us through coordinated disclosure.
+
+**Please do NOT report security vulnerabilities through public github issues, discussions, or pull requests!**
+
+Instead, please send an email to `security@datum.net` with as much information as possible to best help us understand and resolve the issues. See the security policy attached to this repository for more details.
+
+## Questions?
+
+You can open a github issue on this repository, or email us at `info@datum.net`
