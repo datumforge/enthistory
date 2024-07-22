@@ -12,13 +12,15 @@ import (
 	{{- if $.WithHistoryTimeIndex }}
 	"entgo.io/ent/schema/index"
 	{{- end }}
+	"time"
 
 	"github.com/datumforge/enthistory"
-
 	"github.com/datumforge/entx"
-
-	"time"
+	{{- if $.AuthzPolicy.Enabled }}
+	"github.com/datumforge/fgax/entfga"
+	{{- end }}
 )
+
 {{- $schema := .Schema }}
 {{- $name := $schema.Name }}
 {{- $fields := $schema.Fields }}
@@ -46,6 +48,13 @@ func ({{ $name }}) Annotations() []schema.Annotation {
 		entgql.QueryField(),
 		entgql.RelayConnection(),
 		{{- end}}
+		{{- if and (.AuthzPolicy.Enabled) (.AuthzPolicy.ObjectType) }}
+		entfga.Annotations{
+			ObjectType:   "{{ .AuthzPolicy.ObjectType }}",
+			IDField:      "{{ .AuthzPolicy.IDField }}",
+			IncludeHooks: false,
+		},
+		{{- end }}
 	}
 }
 
@@ -95,3 +104,4 @@ func ({{ $name }}) Indexes() []ent.Index {
 	}
 }
 {{- end }}
+

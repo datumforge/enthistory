@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -30,6 +31,15 @@ type templateInfo struct {
 	WithUpdatedBy        bool
 	UpdatedByValueType   string
 	WithHistoryTimeIndex bool
+	AuthzPolicy          authzPolicyInfo
+}
+
+// authzPolicyInfo is a struct that holds the object type and id field for the authz policy
+type authzPolicyInfo struct {
+	Enabled         bool
+	ObjectType      string
+	IDField         string
+	NillableIDField bool
 }
 
 var (
@@ -49,6 +59,9 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 		SchemaPkg:         pkg,
 		SchemaName:        h.config.SchemaName,
 		Query:             h.config.Query,
+		AuthzPolicy: authzPolicyInfo{
+			Enabled: h.config.AuthzPolicy,
+		},
 	}
 
 	// setup history time and updated by based on config settings
@@ -84,6 +97,14 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 
 	historyFields := h.createHistoryFields(schema.Fields)
 
+	// if authz policy is enabled, add the object type and id field to the history schema
+	if info.AuthzPolicy.Enabled {
+		err := info.getAuthzPolicyInfo(schema)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// merge the original schema onto the history schema
 	historySchema.Name = fmt.Sprintf("%vHistory", schema.Name)
 	historySchema.Fields = append(historySchema.Fields, historyFields...)
@@ -102,6 +123,11 @@ func (h *HistoryExtension) generateHistorySchema(schema *load.Schema, idType str
 		},
 		"DATUM_SCHEMAGEN": map[string]any{
 			"skip": true,
+		},
+		"Authz": map[string]any{
+			"ObjectType":   info.AuthzPolicy.ObjectType,
+			"IDField":      info.AuthzPolicy.IDField,
+			"IncludeHooks": false,
 		},
 	}
 
@@ -138,6 +164,7 @@ func (h *HistoryExtension) generateHistorySchemas(next gen.Generator) gen.Genera
 		var wg sync.WaitGroup
 
 		for _, schema := range g.Schemas {
+			wg.Add(1)
 			go h.createSchemas(g, schema, &wg)
 		}
 
@@ -186,6 +213,9 @@ func (h *HistoryExtension) createSchemas(g *gen.Graph, schema *load.Schema, wg *
 
 	// add history schema to list of schemas in the graph
 	h.schemas = append(h.schemas, schema, historySchema)
+
+	// sort schemas alphabetically
+	h.schemas = sortSchemasAlphabetically(h.schemas)
 }
 
 // getHistorySchemaPath returns the path of the history schemas
@@ -250,4 +280,63 @@ func (h *HistoryExtension) createHistoryFields(schemaFields []*load.Field) []*lo
 	}
 
 	return historyFields
+}
+
+// if organization -> use id field
+// if org owned --> OwnerId is the field to use
+// if has field organization_id, use that
+// if user -> use id field + user type
+// if user owned -> use ownerID field
+// else -> no permissions
+func (t *templateInfo) getAuthzPolicyInfo(schema *load.Schema) error {
+	switch {
+	case schema.Name == "Organization", schema.Name == "User":
+		t.AuthzPolicy.IDField = "Ref" // this is the original id field
+		t.AuthzPolicy.ObjectType = strings.ToLower(schema.Name)
+		t.AuthzPolicy.NillableIDField = false
+
+		return nil
+	case strings.Contains(schema.Name, "Setting"):
+		table := strings.TrimSuffix(schema.Name, "Setting")
+		t.AuthzPolicy.IDField = fmt.Sprintf("%sID", table)
+		t.AuthzPolicy.ObjectType = table
+		t.AuthzPolicy.NillableIDField = true
+	case hasField(schema.Fields, "organization_id"):
+		t.AuthzPolicy.IDField = "OrganizationID"
+		t.AuthzPolicy.ObjectType = "organization"
+		t.AuthzPolicy.NillableIDField = false
+
+		return nil
+	case hasField(schema.Fields, "owner_id"):
+		// is it a user owner or organization owner?
+		t.AuthzPolicy.IDField = "OwnerID"
+		t.AuthzPolicy.ObjectType = "organization"
+		t.AuthzPolicy.NillableIDField = true
+	default:
+		fmt.Println("we got nothing for:", schema.Name)
+		t.AuthzPolicy.Enabled = false // disable authz policy
+		return nil                    // no permissions
+	}
+
+	return nil
+}
+
+func hasField(fields []*load.Field, fieldName string) bool {
+	for _, field := range fields {
+		if field.Name == fieldName {
+			return true
+		}
+	}
+
+	return false
+}
+
+// sortSchemasAlphabetically sorts the schemas alphabetically by name to ensure ordering is consistent
+func sortSchemasAlphabetically(schemas []*load.Schema) []*load.Schema {
+	// sort schemas alphabetically
+	sort.Slice(schemas, func(i, j int) bool {
+		return schemas[i].Name < schemas[j].Name
+	})
+
+	return schemas
 }
