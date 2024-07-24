@@ -85,45 +85,50 @@ func (h *HistoryExtension) Annotations() []entc.Annotation {
 	}
 }
 
+// SetFirstRun sets the first run value for the history extension outside of the options
+func (h *HistoryExtension) SetFirstRun(firstRun bool) {
+	h.config.FirstRun = firstRun
+}
+
 // WithAuditing allows you to turn on the code generation for the `.Audit()` method
 func WithAuditing() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.Auditing = true
+	return func(h *HistoryExtension) {
+		h.config.Auditing = true
 	}
 }
 
 func WithAuthzPolicy() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.AuthzPolicy = true
+	return func(h *HistoryExtension) {
+		h.config.AuthzPolicy = true
 	}
 }
 
 // WithGQLQuery adds the entgql Query annotation to the history schema in order to allow for querying
 func WithGQLQuery() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.Query = true
+	return func(h *HistoryExtension) {
+		h.config.Query = true
 	}
 }
 
 // WithHistoryTimeIndex allows you to add an index to the "history_time" fields
 func WithHistoryTimeIndex() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.HistoryTimeIndex = true
+	return func(h *HistoryExtension) {
+		h.config.HistoryTimeIndex = true
 	}
 }
 
 // WithImmutableFields allows you to set all tracked fields in history to Immutable
 func WithImmutableFields() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.FieldProperties.Immutable = true
+	return func(h *HistoryExtension) {
+		h.config.FieldProperties.Immutable = true
 	}
 }
 
 // WithNillableFields allows you to set all tracked fields in history to Nillable
 // except enthistory managed fields (history_time, ref, operation, updated_by, & deleted_by)
 func WithNillableFields() ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.FieldProperties.Nillable = true
+	return func(h *HistoryExtension) {
+		h.config.FieldProperties.Nillable = true
 	}
 }
 
@@ -131,44 +136,39 @@ func WithNillableFields() ExtensionOption {
 // This can be used to set a schema name for multi-schema migrations and SchemaConfig feature
 // https://entgo.io/docs/multischema-migrations/
 func WithSchemaName(schemaName string) ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.SchemaName = schemaName
+	return func(h *HistoryExtension) {
+		h.config.SchemaName = schemaName
 	}
 }
 
 // WithSchemaPath allows you to set an alternative schemaPath
 // Defaults to "./schema"
 func WithSchemaPath(schemaPath string) ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.SchemaPath = schemaPath
+	return func(h *HistoryExtension) {
+		h.config.SchemaPath = schemaPath
 	}
 }
 
 // WithFirstRun tells the extension to generate the history schema on the first run
 // which leaves out the entfga policy
 func WithFirstRun(firstRun bool) ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.FirstRun = firstRun
+	return func(h *HistoryExtension) {
+		h.config.FirstRun = firstRun
 	}
-}
-
-// SetFirstRun sets the first run value for the history extension outside of the options
-func (e *HistoryExtension) SetFirstRun(firstRun bool) {
-	e.config.FirstRun = firstRun
 }
 
 // WithSkipper allows you to set a skipper function to skip history tracking
 func WithSkipper(skipper string) ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.Skipper = skipper
+	return func(h *HistoryExtension) {
+		h.config.Skipper = skipper
 	}
 }
 
 // WithUpdatedBy sets the key and type for pulling updated_by from the context,
 // usually done via a middleware to track which users are making which changes
 func WithUpdatedBy(key string, valueType ValueType) ExtensionOption {
-	return func(e *HistoryExtension) {
-		e.config.UpdatedBy = &UpdatedBy{
+	return func(h *HistoryExtension) {
+		h.config.UpdatedBy = &UpdatedBy{
 			key:       key,
 			valueType: valueType,
 		}

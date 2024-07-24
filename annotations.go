@@ -33,16 +33,15 @@ func (Annotations) Name() string {
 // jsonUnmarshalAnnotations unmarshals the annotations from the schema
 // this is useful when you have a map[string]any and want to get the fields
 // from the annotation
-func jsonUnmarshalAnnotations(data any) (Annotations, error) {
+func jsonUnmarshalAnnotations(data any) (a Annotations, err error) {
 	out, err := json.Marshal(data)
 	if err != nil {
-		return Annotations{}, err
+		return
 	}
 
-	var a Annotations
-	if err := json.Unmarshal(out, &a); err != nil {
-		return Annotations{}, err
+	if err = json.Unmarshal(out, &a); err != nil {
+		return
 	}
 
-	return a, nil
+	return
 }

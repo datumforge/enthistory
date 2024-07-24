@@ -75,20 +75,19 @@ func shouldGenerate(schema *load.Schema) bool {
 // GenerateSchemas generates the history schema for all schemas in the schema path
 // this should be called before the entc.Generate call
 // so the schemas exist at the time of code generation
-func (e *HistoryExtension) GenerateSchemas() error {
-	graph, err := entc.LoadGraph(e.config.SchemaPath, &gen.Config{})
+func (h *HistoryExtension) GenerateSchemas() error {
+	graph, err := entc.LoadGraph(h.config.SchemaPath, &gen.Config{})
 	if err != nil {
-		return fmt.Errorf("failed loading ent graph: %v", err)
+		return fmt.Errorf("%w: failed loading ent graph: %v", ErrFailedToGenerateTemplate, err)
 	}
 
 	// loop through all schemas and generate history schema, if needed
 	for _, schema := range graph.Schemas {
 		if shouldGenerate(schema) {
-			if err := generateHistorySchema(schema, e.config, graph.IDType.String()); err != nil {
+			if err := generateHistorySchema(schema, h.config, graph.IDType.String()); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	return nil
