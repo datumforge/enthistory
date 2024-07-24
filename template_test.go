@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_extractUpdatedByKey(t *testing.T) {
+func TestExtractUpdatedByKey(t *testing.T) {
 	tests := []struct {
 		name string
 		val  any
@@ -39,7 +39,7 @@ func Test_extractUpdatedByKey(t *testing.T) {
 	}
 }
 
-func Test_extractUpdatedByValueType(t *testing.T) {
+func TestExxtractUpdatedByValueType(t *testing.T) {
 	tests := []struct {
 		name string
 		val  any
@@ -85,7 +85,7 @@ func Test_extractUpdatedByValueType(t *testing.T) {
 	}
 }
 
-func Test_fieldPropertiesNillable(t *testing.T) {
+func TestFieldPropertiesNillable(t *testing.T) {
 	tests := []struct {
 		name   string
 		config Config
@@ -130,7 +130,7 @@ func Test_fieldPropertiesNillable(t *testing.T) {
 	}
 }
 
-func Test_isSlice(t *testing.T) {
+func TestIsSlice(t *testing.T) {
 	tests := []struct {
 		name       string
 		typeString string
@@ -160,7 +160,7 @@ func Test_isSlice(t *testing.T) {
 	}
 }
 
-func Test_in(t *testing.T) {
+func TestIn(t *testing.T) {
 	type args struct {
 		str  string
 		list []string
