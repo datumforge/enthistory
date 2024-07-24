@@ -41,17 +41,17 @@ import (
 )
 
 func main() {
-    // create new extension with options
+	// create new extension with options
 	historyExt := enthistory.New(
 		enthistory.WithAuditing(),
 	)
 
-    // generate the history schemas
-    if err := historyExt.GenerateSchemas(); err != nil {
+	// generate the history schemas
+	if err := historyExt.GenerateSchemas(); err != nil {
 		log.Fatalf("generating history schema: %v", err)
 	}
 
-    // run ent generate with extension for other templates
+	// run ent generate with extension for other templates
 	if err := entc.Generate("./schema",
 		&gen.Config{},
 		entc.Extensions(
