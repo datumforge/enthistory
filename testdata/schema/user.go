@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/datumforge/fgax/entfga"
 )
 
 type User struct {
@@ -28,5 +29,10 @@ func (User) Indexes() []ent.Index {
 }
 
 func (User) Annotations() []schema.Annotation {
-	return []schema.Annotation{}
+	return []schema.Annotation{
+		entfga.Annotations{
+			ObjectType:   "user",
+			IncludeHooks: false,
+		},
+	}
 }

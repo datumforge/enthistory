@@ -2,13 +2,16 @@ package enthistory
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 	"entgo.io/ent/entc/load"
+	"github.com/datumforge/fgax/entfga"
 )
 
 var (
@@ -36,12 +39,37 @@ type authzPolicyInfo struct {
 	Enabled         bool
 	ObjectType      string
 	IDField         string
+	AllowedRelation string
 	NillableIDField bool
+	OrgOwned        bool
+	UserOwned       bool
+	SchemaPolicy    ent.Policy
 }
 
 var (
 	historyTableSuffix = "_history"
 )
+
+// GenerateSchemas generates the history schema for all schemas in the schema path
+// this should be called before the entc.Generate call
+// so the schemas exist at the time of code generation
+func (h *HistoryExtension) GenerateSchemas() error {
+	graph, err := entc.LoadGraph(h.config.SchemaPath, &gen.Config{})
+	if err != nil {
+		return fmt.Errorf("%w: failed loading ent graph: %v", ErrFailedToGenerateTemplate, err)
+	}
+
+	// loop through all schemas and generate history schema, if needed
+	for _, schema := range graph.Schemas {
+		if shouldGenerate(schema) {
+			if err := generateHistorySchema(schema, h.config, graph.IDType.String()); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 // shouldGenerate checks if the history schema should be generated for the given schema
 func shouldGenerate(schema *load.Schema) bool {
@@ -72,27 +100,6 @@ func shouldGenerate(schema *load.Schema) bool {
 	}
 }
 
-// GenerateSchemas generates the history schema for all schemas in the schema path
-// this should be called before the entc.Generate call
-// so the schemas exist at the time of code generation
-func (h *HistoryExtension) GenerateSchemas() error {
-	graph, err := entc.LoadGraph(h.config.SchemaPath, &gen.Config{})
-	if err != nil {
-		return fmt.Errorf("%w: failed loading ent graph: %v", ErrFailedToGenerateTemplate, err)
-	}
-
-	// loop through all schemas and generate history schema, if needed
-	for _, schema := range graph.Schemas {
-		if shouldGenerate(schema) {
-			if err := generateHistorySchema(schema, h.config, graph.IDType.String()); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // getTemplateInfo returns the template info for the history schema based on the schema and config
 func getTemplateInfo(schema *load.Schema, config *Config, idType string) (*templateInfo, error) {
 	pkg, err := getPkgFromSchemaPath(config.SchemaPath)
@@ -107,9 +114,10 @@ func getTemplateInfo(schema *load.Schema, config *Config, idType string) (*templ
 		SchemaName:        config.SchemaName,
 		Query:             config.Query,
 		AuthzPolicy: authzPolicyInfo{
-			Enabled: config.AuthzPolicy,
+			Enabled:         config.Auth.Enabled,
+			AllowedRelation: config.Auth.AllowedRelation,
 		},
-		AddPolicy: !config.FirstRun,
+		AddPolicy: !config.Auth.FirstRun,
 	}
 
 	// setup history time and updated by based on config settings
@@ -246,47 +254,88 @@ func createHistoryFields(schemaFields []*load.Field) []*load.Field {
 }
 
 // getAuthzPolicyInfo sets the object type and id field for the authz policy
-// based on the schema and takes advantage of the org owned and user owned policies
-// TODO: add support for custom authz policies
+// based on the original schema annotations
 func (t *templateInfo) getAuthzPolicyInfo(schema *load.Schema) error {
-	switch {
-	case schema.Name == "Organization", schema.Name == "User":
-		t.AuthzPolicy.IDField = "Ref" // this is the original id field
-		t.AuthzPolicy.ObjectType = strings.ToLower(schema.Name)
-		t.AuthzPolicy.NillableIDField = false
+	// get entfga annotation, if its not found the history schema should not have an authz policy
+	annotations, err := getAuthzAnnotation(schema)
+	if err != nil {
+		// if the schema does not have an authz annotation, and no existing policy, disable the authz policy
+		if schema.Policy == nil {
+			t.AuthzPolicy.Enabled = false
+		}
 
-		return nil
-	case hasField(schema.Fields, "owner_id"):
-		// is it a user owner or organization owner?
-		t.AuthzPolicy.IDField = "OwnerID"
-		t.AuthzPolicy.ObjectType = "organization"
-		t.AuthzPolicy.NillableIDField = true
-	case strings.Contains(schema.Name, "Setting"):
-		table := strings.TrimSuffix(schema.Name, "Setting")
-		t.AuthzPolicy.IDField = fmt.Sprintf("%sID", table)
-		t.AuthzPolicy.ObjectType = table
-		t.AuthzPolicy.NillableIDField = true
-	case hasField(schema.Fields, "organization_id"):
-		t.AuthzPolicy.IDField = "OrganizationID"
-		t.AuthzPolicy.ObjectType = "organization"
-		t.AuthzPolicy.NillableIDField = false
-
-		return nil
-	default:
-		t.AuthzPolicy.Enabled = false // disable authz policy, we don't have the necessary fields
+		// if the schema does not have an authz annotation, but has a policy, do not disable but return
 		return nil
 	}
+
+	t.AuthzPolicy.NillableIDField = annotations.NillableIDField
+
+	// default to schema name if object type is not set
+	if annotations.ObjectType == "" {
+		t.AuthzPolicy.ObjectType = strings.ToLower(schema.Name)
+	} else {
+		t.AuthzPolicy.ObjectType = annotations.ObjectType
+	}
+
+	// the id is now the `ref` field on the history table
+	if annotations.IDField == "" || annotations.IDField == "ID" {
+		t.AuthzPolicy.IDField = "Ref"
+	} else {
+		t.AuthzPolicy.IDField = annotations.IDField
+	}
+
+	t.AuthzPolicy.OrgOwned = isOrgOwned(schema)
+	t.AuthzPolicy.UserOwned = isUserOwned(schema)
 
 	return nil
 }
 
-// hasField checks if a field exists in the schema
-func hasField(fields []*load.Field, fieldName string) bool {
-	for _, field := range fields {
-		if field.Name == fieldName {
-			return true
+// isOrgOwned checks if the schema is org owned and returns true if it is
+func isOrgOwned(schema *load.Schema) bool {
+	for _, f := range schema.Fields {
+		// all org owned objects are mixed in
+		if !f.Position.MixedIn {
+			continue
+		}
+
+		if f.Name == "owner_id" {
+			return strings.Contains(f.Comment, "organization")
 		}
 	}
-
 	return false
+}
+
+// isUserOwned checks if the schema is user owned and returns true if it is
+func isUserOwned(schema *load.Schema) bool {
+	for _, f := range schema.Fields {
+		// all org owned objects are mixed in
+		if !f.Position.MixedIn {
+			continue
+		}
+
+		if f.Name == "owner_id" {
+			return strings.Contains(f.Comment, "user")
+		}
+	}
+	return false
+}
+
+// getAuthzAnnotation looks for the entfga Authz annotation in the schema
+// and unmarshals the annotations
+func getAuthzAnnotation(schema *load.Schema) (a entfga.Annotations, err error) {
+	authzAnnotation, ok := schema.Annotations["Authz"]
+	if !ok {
+		return a, fmt.Errorf("authz annotation not found in schema %s", schema.Name)
+	}
+
+	out, err := json.Marshal(authzAnnotation)
+	if err != nil {
+		return
+	}
+
+	if err = json.Unmarshal(out, &a); err != nil {
+		return
+	}
+
+	return
 }

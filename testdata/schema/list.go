@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 
 	"github.com/datumforge/enthistory"
+	"github.com/datumforge/fgax/entfga"
 )
 
 type List struct {
@@ -27,6 +28,11 @@ func (List) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		enthistory.Annotations{
 			Exclude: false,
+		},
+		entfga.Annotations{
+			ObjectType:   "organization",
+			IDField:      "OwnerID",
+			IncludeHooks: false,
 		},
 	}
 }

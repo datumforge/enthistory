@@ -90,6 +90,7 @@ func ({{ $name }}) Fields() []ent.Field {
 
 
 {{- if $.WithHistoryTimeIndex }}
+// Indexes of the {{ $name }}
 func ({{ $name }}) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("history_time"),
@@ -97,8 +98,18 @@ func ({{ $name }}) Indexes() []ent.Index {
 }
 {{- end }}
 
-
 {{- if and (.AuthzPolicy.Enabled) ($.AddPolicy) }}
+
+{{- if .AuthzPolicy.AllowedRelation }}
+// Interceptors of the {{ $name }}
+func ({{ $name }}) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		interceptors.HistoryAccess("{{ .AuthzPolicy.AllowedRelation }}", {{ .AuthzPolicy.OrgOwned }},  {{ .AuthzPolicy.UserOwned }}),
+	}
+}
+{{- end }}
+
+{{- if .AuthzPolicy.ObjectType }}
 // Policy of the {{ $name }}
 func ({{ $name }}) Policy() ent.Policy {
 	return privacy.Policy{
@@ -110,4 +121,5 @@ func ({{ $name }}) Policy() ent.Policy {
 		},
 	}
 }
+{{- end }}
 {{- end }}

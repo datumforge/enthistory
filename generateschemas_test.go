@@ -61,3 +61,67 @@ func TestShouldGenerate(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAuthzPolicyInfo(t *testing.T) {
+	graph, err := entc.LoadGraph("./testdata/schema", &gen.Config{})
+	require.NoError(t, err)
+
+	tests := []struct {
+		name          string
+		schemaName    string
+		expectedValue authzPolicyInfo
+	}{
+		{
+			name:       "self referencing schema",
+			schemaName: "User",
+			expectedValue: authzPolicyInfo{
+				ObjectType:      "user",
+				NillableIDField: false,
+				IDField:         "Ref",
+			},
+		},
+		{
+			name:       "org owned schema",
+			schemaName: "List",
+			expectedValue: authzPolicyInfo{
+				ObjectType:      "organization",
+				NillableIDField: false,
+				IDField:         "OwnerID",
+			},
+		},
+		{
+			name:       "nothing set but nillable, use schema name",
+			schemaName: "Todo",
+			expectedValue: authzPolicyInfo{
+				ObjectType:      "todo",
+				NillableIDField: true,
+				IDField:         "Ref",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var schema *load.Schema
+
+			for _, s := range graph.Schemas {
+				if s.Name == tt.schemaName {
+					schema = s
+					break
+				}
+			}
+
+			if schema == nil {
+				t.Fatalf("schema %s not found", tt.schemaName)
+			}
+
+			info := &templateInfo{
+				AuthzPolicy: authzPolicyInfo{},
+			}
+
+			err := info.getAuthzPolicyInfo(schema)
+			require.NoError(t, err)
+
+			assert.Equal(t, tt.expectedValue, info.AuthzPolicy)
+		})
+	}
+}

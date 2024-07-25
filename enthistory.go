@@ -23,14 +23,23 @@ type FieldProperties struct {
 type Config struct {
 	UpdatedBy        *UpdatedBy
 	Auditing         bool
-	AuthzPolicy      bool
 	SchemaPath       string
 	SchemaName       string
 	Query            bool
 	Skipper          string
 	FieldProperties  *FieldProperties
 	HistoryTimeIndex bool
-	FirstRun         bool
+	Auth             AuthzSettings
+}
+
+type AuthzSettings struct {
+	// Enabled is a boolean that tells the extension to generate the authz policy
+	Enabled bool
+	// FirstRun is a boolean that tells the extension to only generate the policies after the first run
+	FirstRun bool
+	// AllowedRelation is the name of the relation that should be used to restrict
+	// all audit log queries to users with that role, if not set the interceptor will not be added
+	AllowedRelation string
 }
 
 // Name of the Config
@@ -87,7 +96,7 @@ func (h *HistoryExtension) Annotations() []entc.Annotation {
 
 // SetFirstRun sets the first run value for the history extension outside of the options
 func (h *HistoryExtension) SetFirstRun(firstRun bool) {
-	h.config.FirstRun = firstRun
+	h.config.Auth.FirstRun = firstRun
 }
 
 // WithAuditing allows you to turn on the code generation for the `.Audit()` method
@@ -99,7 +108,7 @@ func WithAuditing() ExtensionOption {
 
 func WithAuthzPolicy() ExtensionOption {
 	return func(h *HistoryExtension) {
-		h.config.AuthzPolicy = true
+		h.config.Auth.Enabled = true
 	}
 }
 
@@ -153,7 +162,14 @@ func WithSchemaPath(schemaPath string) ExtensionOption {
 // which leaves out the entfga policy
 func WithFirstRun(firstRun bool) ExtensionOption {
 	return func(h *HistoryExtension) {
-		h.config.FirstRun = firstRun
+		h.config.Auth.FirstRun = firstRun
+	}
+}
+
+// WithAllowedRelation sets the relation that should be used to restrict all audit log queries to users with that role
+func WithAllowedRelation(relation string) ExtensionOption {
+	return func(h *HistoryExtension) {
+		h.config.Auth.AllowedRelation = relation
 	}
 }
 

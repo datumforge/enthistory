@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 
 	"github.com/datumforge/enthistory"
+	"github.com/datumforge/fgax/entfga"
 )
 
 type Todo struct {
@@ -27,6 +28,10 @@ func (Todo) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		enthistory.Annotations{
 			Exclude: true,
+		},
+		entfga.Annotations{
+			NillableIDField: true,
+			IncludeHooks:    false,
 		},
 	}
 }
