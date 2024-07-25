@@ -34,7 +34,9 @@ func (Annotations) Name() string {
 // this is useful when you have a map[string]any and want to get the fields
 // from the annotation
 func jsonUnmarshalAnnotations(data any) (a Annotations, err error) {
-	out, err := json.Marshal(data)
+	var out []byte
+
+	out, err = json.Marshal(data)
 	if err != nil {
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"entgo.io/ent"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 	"entgo.io/ent/entc/load"
@@ -19,31 +18,50 @@ var (
 	_templates embed.FS
 )
 
+// templateInfo holds the information needed to generate the history schema
 type templateInfo struct {
-	Schema               *load.Schema
-	IDType               string
-	SchemaPkg            string
-	TableName            string
-	SchemaName           string
-	Query                bool
-	OriginalTableName    string
-	WithUpdatedBy        bool
-	UpdatedByValueType   string
+	// Schema the history schema is based on
+	Schema *load.Schema
+	// IDType is the type of the id field in the schema (e.g. int, string)
+	IDType string
+	// SchemaPkg is the package of the schema
+	SchemaPkg string
+	// TableName is the name of the history table
+	TableName string
+	// SchemaName is the name of the schema
+	SchemaName string
+	// Query is a boolean that tells the extension to add the entgql query annotations
+	Query bool
+	// OriginalTableName is the name of the original schema
+	OriginalTableName string
+	// WithUpdatedBy is a boolean that tells the extension to add the updated_by fields
+	WithUpdatedBy bool
+	// UpdatedByValueType is the type of the updated_by field (e..g int, string)
+	UpdatedByValueType string
+	// WithHistoryTimeIndex is a boolean that tells the extension to add the history_time index
 	WithHistoryTimeIndex bool
-	AuthzPolicy          authzPolicyInfo
-	AddPolicy            bool
+	// AuthzPolicy is the authz policy information
+	AuthzPolicy authzPolicyInfo
+	// AddPolicy is a boolean that tells the extension to add the policy to the schema
+	AddPolicy bool
 }
 
 // authzPolicyInfo is a struct that holds the object type and id field for the authz policy
 type authzPolicyInfo struct {
-	Enabled         bool
-	ObjectType      string
-	IDField         string
+	// Enabled is a boolean that tells the extension to generate the authz policy
+	Enabled bool
+	// ObjectType is the object type for the authz policy
+	ObjectType string
+	// IDField is the id field for the authz policy
+	IDField string
+	// AllowedRelation is the name of the relation that should be used to restrict who can access the history table
 	AllowedRelation string
+	// NillableIDField is a boolean that tells the extension to add the nillable id field
 	NillableIDField bool
-	OrgOwned        bool
-	UserOwned       bool
-	SchemaPolicy    ent.Policy
+	// OrgOwned is a boolean that tells the extension that the schema is org owned, used by the history interceptor
+	OrgOwned bool
+	// UserOwned is a boolean that tells the extension that the schema is user owned, used by the history interceptor
+	UserOwned bool
 }
 
 var (
@@ -285,6 +303,7 @@ func (t *templateInfo) getAuthzPolicyInfo(schema *load.Schema) error {
 	}
 
 	t.AuthzPolicy.OrgOwned = isOrgOwned(schema)
+
 	t.AuthzPolicy.UserOwned = isUserOwned(schema)
 
 	return nil
@@ -302,6 +321,7 @@ func isOrgOwned(schema *load.Schema) bool {
 			return strings.Contains(f.Comment, "organization")
 		}
 	}
+
 	return false
 }
 
@@ -317,6 +337,7 @@ func isUserOwned(schema *load.Schema) bool {
 			return strings.Contains(f.Comment, "user")
 		}
 	}
+
 	return false
 }
 
@@ -325,7 +346,8 @@ func isUserOwned(schema *load.Schema) bool {
 func getAuthzAnnotation(schema *load.Schema) (a entfga.Annotations, err error) {
 	authzAnnotation, ok := schema.Annotations["Authz"]
 	if !ok {
-		return a, fmt.Errorf("authz annotation not found in schema %s", schema.Name)
+		// this error is never returned, but is here for clarity
+		return a, fmt.Errorf("authz annotation not found in schema %s", schema.Name) //nolint:err113
 	}
 
 	out, err := json.Marshal(authzAnnotation)

@@ -4,6 +4,7 @@ go 1.22.5
 
 require (
 	entgo.io/ent v0.13.1
+	github.com/datumforge/fgax v0.4.0
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/tools v0.22.0
@@ -13,7 +14,6 @@ require (
 	ariga.io/atlas v0.24.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/datumforge/fgax v0.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-openapi/inflect v0.21.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
