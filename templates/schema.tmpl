@@ -78,6 +78,9 @@ func ({{ $name }}) Fields() []ent.Field {
 			// make sure the mixed in fields do not have unique constraints
 			field.Descriptor().Unique = false
 
+			// make sure the mixed in fields do not have validators
+			field.Descriptor().Validators = nil
+
 			// append the mixed in field to the history fields
 			historyFields = append(historyFields, field)
 		}
@@ -87,6 +90,9 @@ func ({{ $name }}) Fields() []ent.Field {
 	for _, field := range original.Fields() {
 		// make sure the fields do not have unique constraints
 		field.Descriptor().Unique = false
+
+		// make sure the mixed in fields do not have validators
+		field.Descriptor().Validators = nil
 
 		// append the field to the history fields
 		historyFields = append(historyFields, field)
