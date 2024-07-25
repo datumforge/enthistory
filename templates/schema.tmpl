@@ -15,7 +15,6 @@ import (
 
 {{- $schema := .Schema }}
 {{- $name := $schema.Name }}
-{{- $fields := $schema.Fields }}
 
 // {{ $name }} holds the schema definition for the {{ $name }} entity.
 type {{ $name }} struct {
@@ -76,12 +75,20 @@ func ({{ $name }}) Fields() []ent.Field {
 	mixins := {{ .OriginalTableName }}{}.Mixin()
 	for _, mixin := range mixins {
 		for _, field := range mixin.Fields() {
+			// make sure the mixed in fields do not have unique constraints
+			field.Descriptor().Unique = false
+
+			// append the mixed in field to the history fields
 			historyFields = append(historyFields, field)
 		}
 	}
 
 	original := {{ .OriginalTableName }}{}
 	for _, field := range original.Fields() {
+		// make sure the fields do not have unique constraints
+		field.Descriptor().Unique = false
+
+		// append the field to the history fields
 		historyFields = append(historyFields, field)
 	}
 

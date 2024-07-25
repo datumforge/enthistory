@@ -173,12 +173,6 @@ func generateHistorySchema(schema *load.Schema, config *Config, idType string) e
 		return err
 	}
 
-	if info.WithHistoryTimeIndex {
-		historySchema.Indexes = append(historySchema.Indexes, &load.Index{Fields: []string{"history_time"}})
-	}
-
-	historyFields := createHistoryFields(schema.Fields)
-
 	// if authz policy is enabled, add the object type and id field to the history schema
 	if info.AuthzPolicy.Enabled {
 		err := info.getAuthzPolicyInfo(schema)
@@ -189,7 +183,6 @@ func generateHistorySchema(schema *load.Schema, config *Config, idType string) e
 
 	// merge the original schema onto the history schema
 	historySchema.Name = fmt.Sprintf("%vHistory", schema.Name)
-	historySchema.Fields = append(historySchema.Fields, historyFields...)
 
 	info.Schema = historySchema
 
@@ -217,58 +210,6 @@ func getHistorySchemaPath(schema *load.Schema, config *Config) (string, error) {
 	path := fmt.Sprintf("%s/%s%s.go", abs, strings.ToLower(schema.Name), historyTableSuffix)
 
 	return path, nil
-}
-
-// createHistoryFields sets the fields for the history schema, which should include
-// all fields from the original schema as well as fields from the original schema included
-// by mixins
-func createHistoryFields(schemaFields []*load.Field) []*load.Field {
-	historyFields := []*load.Field{}
-
-	// start at 3 because there are three base fields for history tables
-	// history_time, ref, and operation
-	i := 3
-
-	for _, field := range schemaFields {
-		nillable := field.Nillable
-		immutable := field.Immutable
-		optional := field.Optional
-
-		newField := load.Field{
-			Name:         field.Name,
-			Info:         copyRef(field.Info),
-			Tag:          field.Tag,
-			Size:         copyRef(field.Size),
-			Enums:        field.Enums,
-			Unique:       false,
-			Nillable:     nillable,
-			Optional:     optional,
-			Default:      field.Default,
-			DefaultValue: field.DefaultValue,
-			DefaultKind:  field.DefaultKind,
-			Immutable:    immutable,
-			StorageKey:   field.StorageKey,
-			Position:     copyRef(field.Position),
-			Sensitive:    field.Sensitive,
-			SchemaType:   field.SchemaType,
-			Annotations:  field.Annotations,
-			Comment:      field.Comment,
-		}
-
-		// This wipes references to fields from mixins
-		// which we want so we don't include anything other than fields
-		// from our mixins
-		newField.Position = &load.Position{
-			Index:      i,
-			MixedIn:    false,
-			MixinIndex: 0,
-		}
-		i += 1
-
-		historyFields = append(historyFields, &newField)
-	}
-
-	return historyFields
 }
 
 // getAuthzPolicyInfo sets the object type and id field for the authz policy
