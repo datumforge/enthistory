@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
@@ -77,14 +78,19 @@ func (h *HistoryExtension) GenerateSchemas() error {
 		return fmt.Errorf("%w: failed loading ent graph: %v", ErrFailedToGenerateTemplate, err)
 	}
 
+	// Create history schemas concurrently
+	var wg sync.WaitGroup
+
 	// loop through all schemas and generate history schema, if needed
 	for _, schema := range graph.Schemas {
 		if shouldGenerate(schema) {
-			if err := generateHistorySchema(schema, h.config, graph.IDType.String()); err != nil {
-				return err
-			}
+			wg.Add(1)
+
+			go generateHistorySchema(schema, h.config, graph.IDType.String(), &wg)
 		}
 	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -161,23 +167,25 @@ func getTemplateInfo(schema *load.Schema, config *Config, idType string) (*templ
 }
 
 // generateHistorySchema creates the history schema based on the original schema
-func generateHistorySchema(schema *load.Schema, config *Config, idType string) error {
+func generateHistorySchema(schema *load.Schema, config *Config, idType string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	info, err := getTemplateInfo(schema, config, idType)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// Load new base history schema
 	historySchema, err := loadHistorySchema(info.IDType)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// if authz policy is enabled, add the object type and id field to the history schema
 	if info.AuthzPolicy.Enabled {
 		err := info.getAuthzPolicyInfo(schema)
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -189,15 +197,13 @@ func generateHistorySchema(schema *load.Schema, config *Config, idType string) e
 	// Get path to write new history schema file
 	path, err := getHistorySchemaPath(schema, config)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// execute schemaTemplate at the history schema path
 	if err = parseSchemaTemplate(*info, path); err != nil {
-		return err
+		panic(err)
 	}
-
-	return nil
 }
 
 // getHistorySchemaPath returns the path of the history schemas
