@@ -1,12 +1,19 @@
 package enthistory
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"strings"
 	"text/template"
 
 	"entgo.io/ent/entc/gen"
 	"github.com/stoewer/go-strcase"
+	"golang.org/x/tools/imports"
+)
+
+const (
+	templateDir = "templates"
 )
 
 // extractUpdatedByKey gets the key that is used for the updated_by field
@@ -73,14 +80,43 @@ func parseTemplate(name, path string) *gen.Template {
 }
 
 // parseSchemaTemplate parses the template and sets values in the template
-func parseSchemaTemplate(create *os.File, info templateInfo) error {
+func parseSchemaTemplate(info templateInfo, path string) error {
+	name := "schema"
+	templateName := fmt.Sprintf("%s.tmpl", name)
+
 	t := template.New("schema")
 	t.Funcs(template.FuncMap{
 		"ToUpperCamel": strcase.UpperCamelCase,
 		"ToLower":      strings.ToLower,
 	})
 
-	template.Must(t.ParseFS(_templates, "templates/schema.tmpl"))
+	template.Must(t.ParseFS(_templates, fmt.Sprintf("%s/%s", templateDir, templateName)))
 
-	return t.ExecuteTemplate(create, "schema.tmpl", info)
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, templateName, info); err != nil {
+		return fmt.Errorf("%w: failed to execute template: %v", ErrFailedToGenerateTemplate, err)
+	}
+
+	return writeAndFormatFile(buf, path)
+}
+
+// writeAndFormatFile formats the bytes using gofmt and goimports and writes them to the output file
+func writeAndFormatFile(buf bytes.Buffer, outputPath string) error {
+	// run gofmt and goimports on the file contents
+	formatted, err := imports.Process(outputPath, buf.Bytes(), nil)
+	if err != nil {
+		return fmt.Errorf("%w: failed to format file: %v", ErrFailedToWriteTemplate, err)
+	}
+
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("%w: failed to create file: %v", ErrFailedToWriteTemplate, err)
+	}
+
+	// write the formatted source to the file
+	if _, err := file.Write(formatted); err != nil {
+		return fmt.Errorf("%w: failed to write to file: %v", ErrFailedToWriteTemplate, err)
+	}
+
+	return nil
 }

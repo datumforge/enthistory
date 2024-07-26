@@ -2,7 +2,6 @@ package enthistory
 
 import (
 	"errors"
-	"fmt"
 )
 
 var (
@@ -17,8 +16,10 @@ var (
 
 	// ErrInvalidSchemaPath is returned when the schema path cannot be determined
 	ErrInvalidSchemaPath = errors.New("invalid schema path, unable to find package name in path")
-)
 
-func newNoIDTypeError(schemaName string) error {
-	return fmt.Errorf("%w: %v", ErrNoIDType, schemaName)
-}
+	// ErrFailedToGenerateTemplate is returned when the template cannot be generated
+	ErrFailedToGenerateTemplate = errors.New("failed to generate template")
+
+	// ErrFailedToWriteTemplate is returned when the template cannot be written
+	ErrFailedToWriteTemplate = errors.New("failed to write template")
+)

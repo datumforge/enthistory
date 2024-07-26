@@ -15,6 +15,7 @@ Credit to [flume/enthistory](https://github.com/flume/enthistory) for the inspir
 - We have more complex schemas, mixins, code gen usage; when attempting to use the originally developed plugin we ran into numerous problems based on the types / methods we had already chosen and was easier to short-term directly update with the changes we needed
 - integration with and/or mutual code updates for our "soft delete" constructs to continue to function
 - Specific desires / levels of control regarding data retention and tracking
+- Authorization policies specific to using openFGA may be harder for others to adopt
 
 
 ## Installation
@@ -26,7 +27,7 @@ go get github.com/datumforge/enthistory@latest
 ```
 
 In addition to installing enthistory, you need to already have, or create two files (`entc.go` and `generate.go`) - this can be within your `ent` directory, but full instructions can be found in the upstream [godoc](https://pkg.go.dev/entgo.io/ent/entc) documentation.
-The `entc.go` file should reference the ent history plugin via `enthistory.NewHistoryExtension`, and the options you include for the plugin depend on your desired implementation (see the Configuration section below) but you can use the following example for reference:
+The `entc.go` file should reference the ent history plugin via `enthistory.New`, and the options you include for the plugin depend on your desired implementation (see the Configuration section below) but you can use the following example for reference:
 
 ```go
 //go:build ignore
@@ -40,12 +41,21 @@ import (
 )
 
 func main() {
+	// create new extension with options
+	historyExt := enthistory.New(
+		enthistory.WithAuditing(),
+	)
+
+	// generate the history schemas
+	if err := historyExt.GenerateSchemas(); err != nil {
+		log.Fatalf("generating history schema: %v", err)
+	}
+
+	// run ent generate with extension for other templates
 	if err := entc.Generate("./schema",
 		&gen.Config{},
 		entc.Extensions(
-			enthistory.NewHistoryExtension(
-				enthistory.WithAuditing(),
-			),
+			historyExt,
 		),
 	); err != nil {
 		log.Fatal("running ent codegen:", err)

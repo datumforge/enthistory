@@ -2,26 +2,19 @@
 package {{ .SchemaPkg }}
 
 import (
-	{{- if $.Query }}
-	"entgo.io/contrib/entgql"
-	{{- end }}
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	{{- if $.WithHistoryTimeIndex }}
-	"entgo.io/ent/schema/index"
-	{{- end }}
 
 	"github.com/datumforge/enthistory"
-
 	"github.com/datumforge/entx"
-
-	"time"
 )
+
 {{- $schema := .Schema }}
 {{- $name := $schema.Name }}
-{{- $fields := $schema.Fields }}
 
 // {{ $name }} holds the schema definition for the {{ $name }} entity.
 type {{ $name }} struct {
@@ -46,6 +39,13 @@ func ({{ $name }}) Annotations() []schema.Annotation {
 		entgql.QueryField(),
 		entgql.RelayConnection(),
 		{{- end}}
+		{{- if and (.AuthzPolicy.Enabled) (.AuthzPolicy.ObjectType) }}
+		entfga.Annotations{
+			ObjectType:   "{{ .AuthzPolicy.ObjectType }}",
+			IDField:      "{{ .AuthzPolicy.IDField }}",
+			IncludeHooks: false,
+		},
+		{{- end }}
 	}
 }
 
@@ -75,12 +75,26 @@ func ({{ $name }}) Fields() []ent.Field {
 	mixins := {{ .OriginalTableName }}{}.Mixin()
 	for _, mixin := range mixins {
 		for _, field := range mixin.Fields() {
+			// make sure the mixed in fields do not have unique constraints
+			field.Descriptor().Unique = false
+
+			// make sure the mixed in fields do not have validators
+			field.Descriptor().Validators = nil
+
+			// append the mixed in field to the history fields
 			historyFields = append(historyFields, field)
 		}
 	}
 
 	original := {{ .OriginalTableName }}{}
 	for _, field := range original.Fields() {
+		// make sure the fields do not have unique constraints
+		field.Descriptor().Unique = false
+
+		// make sure the mixed in fields do not have validators
+		field.Descriptor().Validators = nil
+
+		// append the field to the history fields
 		historyFields = append(historyFields, field)
 	}
 
@@ -89,9 +103,36 @@ func ({{ $name }}) Fields() []ent.Field {
 
 
 {{- if $.WithHistoryTimeIndex }}
+// Indexes of the {{ $name }}
 func ({{ $name }}) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("history_time"),
 	}
 }
+{{- end }}
+
+{{- if and (.AuthzPolicy.Enabled) ($.AddPolicy) }}
+
+{{- if .AuthzPolicy.AllowedRelation }}
+// Interceptors of the {{ $name }}
+func ({{ $name }}) Interceptors() []ent.Interceptor {
+	return []ent.Interceptor{
+		interceptors.HistoryAccess("{{ .AuthzPolicy.AllowedRelation }}", {{ .AuthzPolicy.OrgOwned }},  {{ .AuthzPolicy.UserOwned }}),
+	}
+}
+{{- end }}
+
+{{- if .AuthzPolicy.ObjectType }}
+// Policy of the {{ $name }}
+func ({{ $name }}) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.{{ $name }}QueryRuleFunc(func(ctx context.Context, q *generated.{{ $name }}Query) error {
+				return q.CheckAccess(ctx)
+			}),
+			privacy.AlwaysDenyRule(),
+		},
+	}
+}
+{{- end }}
 {{- end }}

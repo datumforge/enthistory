@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent"
 )
 
+// Mutation is an interface that must be implemented by all mutations that are
 type Mutation interface {
 	Op() ent.Op
 	CreateHistoryFromCreate(ctx context.Context) error
@@ -14,10 +15,12 @@ type Mutation interface {
 	CreateHistoryFromDelete(ctx context.Context) error
 }
 
+// Mutator is an interface that must be implemented by all mutators that are
 type Mutator interface {
 	Mutate(context.Context, Mutation) (ent.Value, error)
 }
 
+// On is a helper function that allows you to create a hook that only runs on a specific operation
 func On(hk ent.Hook, op ent.Op) ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
@@ -30,6 +33,7 @@ func On(hk ent.Hook, op ent.Op) ent.Hook {
 	}
 }
 
+// HistoryHooks returns a list of hooks that can be used to create history entries
 func HistoryHooks[T Mutation]() []ent.Hook {
 	return []ent.Hook{
 		On(historyHookCreate[T](), ent.OpCreate),
@@ -38,6 +42,7 @@ func HistoryHooks[T Mutation]() []ent.Hook {
 	}
 }
 
+// getTypedMutation is a helper function that allows you to get a typed mutation from an ent.Mutation
 func getTypedMutation[T Mutation](m ent.Mutation) (T, error) {
 	f, ok := any(m).(T)
 	if !ok {
@@ -47,6 +52,7 @@ func getTypedMutation[T Mutation](m ent.Mutation) (T, error) {
 	return f, nil
 }
 
+// historyHookCreate is a hook that creates a history entry when a create operation is performed
 func historyHookCreate[T Mutation]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
@@ -70,6 +76,7 @@ func historyHookCreate[T Mutation]() ent.Hook {
 	}
 }
 
+// historyHookUpdate is a hook that creates a history entry when an update operation is performed
 func historyHookUpdate[T Mutation]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
@@ -87,6 +94,7 @@ func historyHookUpdate[T Mutation]() ent.Hook {
 	}
 }
 
+// historyHookDelete is a hook that creates a history entry when a delete operation is performed
 func historyHookDelete[T Mutation]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {

@@ -21,6 +21,7 @@ func toSnakeCase(str string) string {
 }
 
 // copyRef makes a copy of a pointer reference
+// nolint:unused
 func copyRef[T any](ref *T) *T {
 	if ref == nil {
 		return nil

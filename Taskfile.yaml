@@ -1,12 +1,6 @@
 version: "3"
 
 tasks:
-  generate:
-    desc: generate the test examples
-    cmds:
-      - go generate ./_examples/basic/ent
-      - go generate ./_examples/custompaths/ent
-
   go:lint:
     desc: runs golangci-lint, the most annoying opinionated linter ever
     cmds:
