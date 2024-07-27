@@ -23,8 +23,10 @@ import (
 	{{- end }}
 )
 
+{{ $includeUpdatedBy := $.Annotations.HistoryConfig.IncludeUpdatedBy }}
 {{ $updatedByKey := extractUpdatedByKey $.Annotations.HistoryConfig.UpdatedBy }}
 {{ $updatedByValueType := extractUpdatedByValueType $.Annotations.HistoryConfig.UpdatedBy }}
+{{ $updatedByNillable := $.Annotations.HistoryConfig.UpdatedBy.Nillable }}
 
 type Change struct {
 	FieldName string
@@ -131,7 +133,7 @@ func (c Change) String(op enthistory.OpType) string {
 
 func (c *Client) Audit(ctx context.Context) ([][]string, error) {
 	records := [][]string{
-		{"Table", "Ref Id", "History Time", "Operation", "Changes"{{ if not (eq $updatedByKey "") }}, "Updated By" {{ end }}},
+		{"Table", "Ref Id", "History Time", "Operation", "Changes"{{ if $includeUpdatedBy }}, "Updated By" {{ end }}},
 	}
 	var record [][]string
 	var err error
@@ -149,19 +151,43 @@ func (c *Client) Audit(ctx context.Context) ([][]string, error) {
 	return records, nil
 }
 
+func (c *Client) AuditWithFilter(ctx context.Context, tableName string) ([][]string, error) {
+	records := [][]string{
+		{"Table", "Ref Id", "History Time", "Operation", "Changes"{{ if $includeUpdatedBy }}, "Updated By" {{ end }}},
+	}
+	var record [][]string
+	var err error
+
+	{{- range $n := $.Nodes }}
+	{{- if (hasSuffix $n.Name "History") }}
+
+	if tableName == "" || tableName == strings.Trim("{{ $n.Name }}", "History") {
+		record, err = audit{{ $n.Name }}(ctx, c.config)
+		if err != nil {
+			return nil, err
+		}
+
+		records = append(records, record...)
+	}
+	{{ end }}
+	{{- end }}
+
+	return records, nil
+}
+
 type record struct {
 	Table       string
 	RefId       any
 	HistoryTime time.Time
 	Operation   enthistory.OpType
 	Changes     []Change
-	{{- if not (eq $updatedByKey "") }}
-	UpdatedBy   *{{ $updatedByValueType }}
+	{{- if $includeUpdatedBy }}
+	UpdatedBy   {{ if $updatedByNillable}}*{{- end}}{{ $updatedByValueType }}
 	{{- end }}
 }
 
 func (r *record) toRow() []string {
-	{{- if not (eq $updatedByKey "") }}
+	{{- if $includeUpdatedBy }}
 	row := make([]string, 6)
 	{{- else }}
 	row := make([]string, 5)
@@ -178,10 +204,20 @@ func (r *record) toRow() []string {
 		}
 		row[4] = fmt.Sprintf("%s\n%s", row[4], change.String(r.Operation))
 	}
-	{{- if not (eq $updatedByKey "") }}
+	{{- if $includeUpdatedBy }}
+	{{- if $updatedByNillable }}
 	if r.UpdatedBy != nil {
 		row[5] = fmt.Sprintf("%v", *r.UpdatedBy)
 	}
+	{{- else if (eq $updatedByValueType "string") }}
+	if r.UpdatedBy != "" {
+		row[5] = fmt.Sprintf("%v", r.UpdatedBy)
+	}
+	{{- else }}
+		if r.UpdatedBy != 0 {
+		row[5] = fmt.Sprintf("%v", r.UpdatedBy)
+	}
+	{{- end}}
 	{{- end }}
 	return row
 }
@@ -227,7 +263,7 @@ func audit{{ $n.Name }}(ctx context.Context, config config) ([][]string, error) 
 				RefId:       curr.Ref,
 				HistoryTime: curr.HistoryTime,
 				Operation:   curr.Operation,
-				{{- if not (eq $updatedByKey "") }}
+				{{- if $includeUpdatedBy }}
 				UpdatedBy:   curr.UpdatedBy,
 				{{- end }}
 			}
