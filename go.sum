@@ -8,8 +8,8 @@ github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7l
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
-github.com/datumforge/fgax v0.5.0 h1:Osxv/V/xEm26weJLhUCf42c53aCCH4bIHsMFx+GMTYQ=
-github.com/datumforge/fgax v0.5.0/go.mod h1:4QPU5TZ1CEjN7Grbbob6kWq7VEwKAECJF/FSlRUlOt4=
+github.com/datumforge/fgax v0.5.1 h1:R+dEXzjfPoAEKXMLUMu13WOeIQXLWKKtCsHuCbYRow4=
+github.com/datumforge/fgax v0.5.1/go.mod h1:yua1hXRxWtiafEGrwfnVY8qxNWZ1/X6nAbg2bWENxq8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
