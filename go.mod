@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	entgo.io/ent v0.13.1
-	github.com/datumforge/fgax v0.5.0
+	github.com/datumforge/fgax v0.5.1
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/tools v0.23.0
