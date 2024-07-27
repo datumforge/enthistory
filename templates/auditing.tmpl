@@ -161,7 +161,7 @@ func (c *Client) AuditWithFilter(ctx context.Context, tableName string) ([][]str
 	{{- range $n := $.Nodes }}
 	{{- if (hasSuffix $n.Name "History") }}
 
-	if tableName == "" || tableName == strings.Trim("{{ $n.Name }}", "History") {
+	if tableName == "" || tableName == strings.TrimSuffix("{{ $n.Name }}", "History") {
 		record, err = audit{{ $n.Name }}(ctx, c.config)
 		if err != nil {
 			return nil, err
