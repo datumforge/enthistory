@@ -3,7 +3,7 @@ module github.com/datumforge/enthistory
 go 1.22.5
 
 require (
-	entgo.io/ent v0.13.1
+	entgo.io/ent v0.14.0
 	github.com/datumforge/fgax v0.5.1
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
