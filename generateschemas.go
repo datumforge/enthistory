@@ -149,13 +149,19 @@ func getTemplateInfo(schema *load.Schema, config *Config, idType string) (*templ
 	if config.UpdatedBy != nil {
 		valueType := config.UpdatedBy.valueType
 
-		if valueType == ValueTypeInt {
+		switch valueType {
+		case ValueTypeInt:
 			info.UpdatedByValueType = "Int"
-		} else if valueType == ValueTypeString {
+		case ValueTypeString:
 			info.UpdatedByValueType = "String"
 		}
 
-		info.WithUpdatedBy = true
+		// if updated_by is enabled, add the updated_by fields
+		// do not include if the key is not set, this should then
+		// use the existing updated_by field
+		if config.UpdatedBy.key != "" {
+			info.WithUpdatedBy = true
+		}
 	}
 
 	info.WithHistoryTimeIndex = config.HistoryTimeIndex

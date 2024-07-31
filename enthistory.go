@@ -11,6 +11,7 @@ type ExtensionOption = func(*HistoryExtension)
 type UpdatedBy struct {
 	key       string
 	valueType ValueType
+	Nillable  bool
 }
 
 // FieldProperties is a struct that holds the properties for the fields in the history schema
@@ -21,6 +22,7 @@ type FieldProperties struct {
 
 // Config is the configuration for the history extension
 type Config struct {
+	IncludeUpdatedBy bool
 	UpdatedBy        *UpdatedBy
 	Auditing         bool
 	SchemaPath       string
@@ -184,9 +186,22 @@ func WithSkipper(skipper string) ExtensionOption {
 // usually done via a middleware to track which users are making which changes
 func WithUpdatedBy(key string, valueType ValueType) ExtensionOption {
 	return func(h *HistoryExtension) {
+		h.config.IncludeUpdatedBy = true
 		h.config.UpdatedBy = &UpdatedBy{
 			key:       key,
 			valueType: valueType,
+			Nillable:  true,
+		}
+	}
+}
+
+// WithUpdatedByFromSchema uses the original update_by value in the schema and includes in the audit results
+func WithUpdatedByFromSchema(valueType ValueType, nillable bool) ExtensionOption {
+	return func(h *HistoryExtension) {
+		h.config.IncludeUpdatedBy = true
+		h.config.UpdatedBy = &UpdatedBy{
+			valueType: ValueTypeString,
+			Nillable:  nillable,
 		}
 	}
 }
